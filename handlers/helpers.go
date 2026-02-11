@@ -29,6 +29,7 @@ func InitTemplates(dir string) {
 		"centsToDollar": centsToDollar,
 		"dict":          dict,
 		"multiply":      multiply,
+		"derefInt":      derefInt,
 	}
 
 	// Pre-parse each page template paired with layout
@@ -165,6 +166,14 @@ func centsToDollar(cents interface{}) string {
 		return "0.00"
 	}
 	return fmt.Sprintf("%.2f", float64(c)/100)
+}
+
+// derefInt dereferences an *int pointer, returning 0 if nil
+func derefInt(p *int) int {
+	if p == nil {
+		return 0
+	}
+	return *p
 }
 
 // multiply returns a * b as a float for use in style calculations
