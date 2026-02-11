@@ -41,6 +41,22 @@ func DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Error getting upcoming deposits: %v", err)
 	}
 
+	// Budget status: per-category allocated vs spent
+	categoryTree, err := models.ListCategoryTree()
+	if err != nil {
+		log.Printf("Error getting category tree: %v", err)
+	}
+
+	spending, err := models.GetAllCategorySpending(year, month)
+	if err != nil {
+		log.Printf("Error getting category spending: %v", err)
+	}
+
+	var budgetStatuses []BudgetStatus
+	for _, cat := range categoryTree {
+		addBudgetStatuses(&budgetStatuses, cat, spending)
+	}
+
 	// Convert to template-friendly format
 	var billItems []UpcomingItem
 	for _, o := range upcomingBills {
@@ -73,6 +89,7 @@ func DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		"Unallocated":      unallocated,
 		"UpcomingBills":    billItems,
 		"UpcomingDeposits": depositItems,
+		"BudgetStatuses":   budgetStatuses,
 	}
 
 	RenderTemplate(w, "dashboard.html", data)
@@ -82,4 +99,37 @@ type UpcomingItem struct {
 	Name   string
 	Date   string
 	Amount int
+}
+
+type BudgetStatus struct {
+	CategoryName string
+	Allocated    int
+	Spent        int
+	Remaining    int
+	Percent      int
+}
+
+func addBudgetStatuses(statuses *[]BudgetStatus, cat models.BudgetCategory, spending map[int]int) {
+	if cat.Budget != nil {
+		allocated := cat.Budget.MonthlyAmount()
+		spent := spending[cat.ID]
+		remaining := allocated - spent
+		pct := 0
+		if allocated > 0 {
+			pct = spent * 100 / allocated
+			if pct > 100 {
+				pct = 100
+			}
+		}
+		*statuses = append(*statuses, BudgetStatus{
+			CategoryName: cat.Name,
+			Allocated:    allocated,
+			Spent:        spent,
+			Remaining:    remaining,
+			Percent:      pct,
+		})
+	}
+	for _, child := range cat.Children {
+		addBudgetStatuses(statuses, child, spending)
+	}
 }

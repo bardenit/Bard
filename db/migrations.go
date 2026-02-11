@@ -40,6 +40,15 @@ var migrations = []string{
 		created_at     TEXT    NOT NULL DEFAULT (datetime('now')),
 		updated_at     TEXT    NOT NULL DEFAULT (datetime('now'))
 	)`,
+	`CREATE TABLE IF NOT EXISTS expenditures (
+		id          INTEGER PRIMARY KEY AUTOINCREMENT,
+		description TEXT    NOT NULL,
+		amount      INTEGER NOT NULL,
+		category_id INTEGER NOT NULL REFERENCES budget_categories(id) ON DELETE CASCADE,
+		date        TEXT    NOT NULL,
+		created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
+		updated_at  TEXT    NOT NULL DEFAULT (datetime('now'))
+	)`,
 }
 
 func RunMigrations() {

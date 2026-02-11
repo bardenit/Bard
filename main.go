@@ -44,6 +44,10 @@ func main() {
 	mux.HandleFunc("/budgets", handlers.BudgetsRouter)
 	mux.HandleFunc("/budgets/{path...}", handlers.BudgetsRouter)
 
+	// Expenditures
+	mux.HandleFunc("/expenditures", handlers.ExpendituresRouter)
+	mux.HandleFunc("/expenditures/{path...}", handlers.ExpendituresRouter)
+
 	// Calendar
 	mux.HandleFunc("GET /calendar", handlers.CalendarHandler)
 

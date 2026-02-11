@@ -36,6 +36,7 @@ func InitTemplates(dir string) {
 		"bills.html",
 		"income.html",
 		"budgets.html",
+		"expenditures.html",
 		"calendar.html",
 	}
 

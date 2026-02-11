@@ -67,4 +67,38 @@
         {{end}}
     </div>
 </div>
+
+{{if .BudgetStatuses}}
+<div class="card" style="margin-top: 1.5rem;">
+    <div class="section-header">
+        <h2>Budget Status</h2>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Category</th>
+                <th>Allocated</th>
+                <th>Spent</th>
+                <th>Remaining</th>
+                <th>Progress</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .BudgetStatuses}}
+            <tr>
+                <td>{{.CategoryName}}</td>
+                <td>{{formatMoney .Allocated}}</td>
+                <td>{{formatMoney .Spent}}</td>
+                <td class="{{if ge .Remaining 0}}positive{{else}}negative{{end}}">{{formatMoney .Remaining}}</td>
+                <td style="min-width: 150px;">
+                    <div style="background: var(--border); border-radius: 4px; height: 20px; overflow: hidden;">
+                        <div style="background: {{if gt .Percent 90}}var(--danger){{else if gt .Percent 70}}#f59e0b{{else}}var(--success){{end}}; height: 100%; width: {{.Percent}}%; transition: width 0.3s;"></div>
+                    </div>
+                </td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{end}}
 {{end}}

@@ -1,0 +1,102 @@
+{{define "content"}}
+<h1>Expenditures</h1>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    {{if .Editing}}
+    <h2 style="margin-bottom: 1rem;">Edit Expenditure</h2>
+    <form method="POST" action="/expenditures/{{.Expenditure.ID}}/update">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="description">Description</label>
+                <input type="text" id="description" name="description" value="{{.Expenditure.Description}}" required>
+            </div>
+            <div class="form-group">
+                <label for="amount">Amount ($)</label>
+                <input type="number" id="amount" name="amount" step="0.01" min="0" value="{{centsToDollar .Expenditure.Amount}}" required>
+            </div>
+            <div class="form-group">
+                <label for="category_id">Category</label>
+                <select id="category_id" name="category_id" required>
+                    <option value="">Select category...</option>
+                    {{range .Categories}}
+                    <option value="{{.ID}}" {{if eq .ID $.Expenditure.CategoryID}}selected{{end}}>{{.Name}}</option>
+                    {{end}}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="date">Date</label>
+                <input type="date" id="date" name="date" value="{{.Expenditure.Date}}" required>
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Update Expenditure</button>
+            <a href="/expenditures" class="btn btn-link">Cancel</a>
+        </div>
+    </form>
+    {{else}}
+    <h2 style="margin-bottom: 1rem;">Add Expenditure</h2>
+    <form method="POST" action="/expenditures/create">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="description">Description</label>
+                <input type="text" id="description" name="description" placeholder="e.g., Grocery shopping" required>
+            </div>
+            <div class="form-group">
+                <label for="amount">Amount ($)</label>
+                <input type="number" id="amount" name="amount" step="0.01" min="0" placeholder="0.00" required>
+            </div>
+            <div class="form-group">
+                <label for="category_id">Category</label>
+                <select id="category_id" name="category_id" required>
+                    <option value="">Select category...</option>
+                    {{range .Categories}}
+                    <option value="{{.ID}}">{{.Name}}</option>
+                    {{end}}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="date">Date</label>
+                <input type="date" id="date" name="date" required>
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Add Expenditure</button>
+        </div>
+    </form>
+    {{end}}
+</div>
+
+{{if .Expenditures}}
+<table>
+    <thead>
+        <tr>
+            <th>Description</th>
+            <th>Amount</th>
+            <th>Category</th>
+            <th>Date</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{range .Expenditures}}
+        <tr>
+            <td>{{.Description}}</td>
+            <td>{{formatMoney .Amount}}</td>
+            <td>{{.CategoryName}}</td>
+            <td>{{.DateFormatted}}</td>
+            <td>
+                <a href="/expenditures/{{.ID}}/edit" class="btn btn-link btn-sm">Edit</a>
+                <form method="POST" action="/expenditures/{{.ID}}/delete" style="display:inline" data-confirm="Delete this expenditure?">
+                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {{end}}
+    </tbody>
+</table>
+{{else}}
+{{if not .Editing}}
+<p style="color: var(--text-muted); text-align: center; padding: 2rem;">No expenditures yet. Add one above.</p>
+{{end}}
+{{end}}
+{{end}}
