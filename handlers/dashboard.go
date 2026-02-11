@@ -109,10 +109,27 @@ type BudgetStatus struct {
 	Percent      int
 }
 
-func addBudgetStatuses(statuses *[]BudgetStatus, cat models.BudgetCategory, spending map[int]int) {
+// categoryTotals returns the total allocated and spent for a category,
+// summing children if the category has no direct budget.
+func categoryTotals(cat models.BudgetCategory, spending map[int]int) (allocated, spent int) {
 	if cat.Budget != nil {
-		allocated := cat.Budget.MonthlyAmount()
-		spent := spending[cat.ID]
+		allocated = cat.Budget.MonthlyAmount()
+	}
+	spent = spending[cat.ID]
+
+	for _, child := range cat.Children {
+		childAlloc, childSpent := categoryTotals(child, spending)
+		allocated += childAlloc
+		spent += childSpent
+	}
+	return
+}
+
+func addBudgetStatuses(statuses *[]BudgetStatus, cat models.BudgetCategory, spending map[int]int) {
+	allocated, spent := categoryTotals(cat, spending)
+
+	// Only show categories that have a budget (directly or via children)
+	if allocated > 0 || spent > 0 {
 		remaining := allocated - spent
 		pct := 0
 		if allocated > 0 {
