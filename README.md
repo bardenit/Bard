@@ -34,13 +34,37 @@ The database file (`budget.db`) is created in the current directory.
 ### Docker
 
 ```bash
-docker build -t budget .
-docker run -d -p 8080:8080 -v budget-data:/data budget
+docker run -d -p 8080:8080 -v budget-data:/data jbarden75/budget:latest
 ```
 
 Open http://localhost:8080
 
 Data persists in the `budget-data` Docker volume.
+
+### Docker Compose
+
+Create a `docker-compose.yml`:
+
+```yaml
+services:
+  budget:
+    image: jbarden75/budget:latest
+    container_name: budget
+    ports:
+      - "8080:8080"
+    volumes:
+      - budget-data:/data
+    restart: unless-stopped
+
+volumes:
+  budget-data:
+```
+
+Then run:
+
+```bash
+docker compose up -d
+```
 
 ### Environment Variables
 
