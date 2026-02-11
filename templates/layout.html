@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{if .Title}}{{.Title}} - {{end}}Budget</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-brand">Budget</div>
+        <div class="nav-links">
+            <a href="/" {{if eq .ActiveNav "dashboard"}}class="active"{{end}}>Dashboard</a>
+            <a href="/bills" {{if eq .ActiveNav "bills"}}class="active"{{end}}>Bills</a>
+            <a href="/income" {{if eq .ActiveNav "income"}}class="active"{{end}}>Income</a>
+            <a href="/budgets" {{if eq .ActiveNav "budgets"}}class="active"{{end}}>Budgets</a>
+            <a href="/calendar" {{if eq .ActiveNav "calendar"}}class="active"{{end}}>Calendar</a>
+        </div>
+    </nav>
+    {{if .Flash}}
+    <div class="flash">{{.Flash}}</div>
+    {{end}}
+    <main class="container">
+        {{template "content" .}}
+    </main>
+    <script src="/static/app.js"></script>
+</body>
+</html>

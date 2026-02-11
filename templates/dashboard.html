@@ -1,0 +1,70 @@
+{{define "content"}}
+<h1>Dashboard</h1>
+
+<div class="summary-grid">
+    <div class="summary-card">
+        <div class="label">Monthly Income</div>
+        <div class="value positive">{{formatMoney .MonthlyIncome}}</div>
+    </div>
+    <div class="summary-card">
+        <div class="label">Monthly Bills</div>
+        <div class="value negative">{{formatMoney .MonthlyBills}}</div>
+    </div>
+    <div class="summary-card">
+        <div class="label">Net Available</div>
+        <div class="value {{if ge .NetAvailable 0}}positive{{else}}negative{{end}}">{{formatMoney .NetAvailable}}</div>
+    </div>
+    <div class="summary-card">
+        <div class="label">Total Budgeted</div>
+        <div class="value">{{formatMoney .TotalBudgeted}}</div>
+    </div>
+    <div class="summary-card">
+        <div class="label">Unallocated</div>
+        <div class="value {{if ge .Unallocated 0}}positive{{else}}negative{{end}}">{{formatMoney .Unallocated}}</div>
+    </div>
+</div>
+
+<div class="two-col">
+    <div class="card">
+        <div class="section-header">
+            <h2>Upcoming Bills</h2>
+        </div>
+        {{if .UpcomingBills}}
+        <ul class="upcoming-list">
+            {{range .UpcomingBills}}
+            <li class="upcoming-item">
+                <div>
+                    <span class="name">{{.Name}}</span>
+                    <span class="date">{{.Date}}</span>
+                </div>
+                <span class="amount bill">{{formatMoney .Amount}}</span>
+            </li>
+            {{end}}
+        </ul>
+        {{else}}
+        <p style="color: var(--text-muted)">No upcoming bills.</p>
+        {{end}}
+    </div>
+
+    <div class="card">
+        <div class="section-header">
+            <h2>Upcoming Deposits</h2>
+        </div>
+        {{if .UpcomingDeposits}}
+        <ul class="upcoming-list">
+            {{range .UpcomingDeposits}}
+            <li class="upcoming-item">
+                <div>
+                    <span class="name">{{.Name}}</span>
+                    <span class="date">{{.Date}}</span>
+                </div>
+                <span class="amount income">{{formatMoney .Amount}}</span>
+            </li>
+            {{end}}
+        </ul>
+        {{else}}
+        <p style="color: var(--text-muted)">No upcoming deposits.</p>
+        {{end}}
+    </div>
+</div>
+{{end}}

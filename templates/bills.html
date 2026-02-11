@@ -1,0 +1,115 @@
+{{define "content"}}
+<h1>Bills</h1>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    {{if .Editing}}
+    <h2 style="margin-bottom: 1rem;">Edit Bill</h2>
+    <form method="POST" action="/bills/{{.Bill.ID}}/update">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" value="{{.Bill.Name}}" required>
+            </div>
+            <div class="form-group">
+                <label for="amount">Amount ($)</label>
+                <input type="number" id="amount" name="amount" step="0.01" min="0" value="{{centsToDollar .Bill.Amount}}" required>
+            </div>
+            <div class="form-group">
+                <label for="due_date">Due Date</label>
+                <input type="date" id="due_date" name="due_date" value="{{.Bill.DueDate}}" required>
+            </div>
+            <div class="form-group">
+                <label for="recurrence">Recurrence</label>
+                <select id="recurrence" name="recurrence">
+                    <option value="once" {{if eq .Bill.Recurrence "once"}}selected{{end}}>Once</option>
+                    <option value="weekly" {{if eq .Bill.Recurrence "weekly"}}selected{{end}}>Weekly</option>
+                    <option value="biweekly" {{if eq .Bill.Recurrence "biweekly"}}selected{{end}}>Biweekly</option>
+                    <option value="monthly" {{if eq .Bill.Recurrence "monthly"}}selected{{end}}>Monthly</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>
+                <input type="checkbox" name="is_active" {{if .Bill.IsActive}}checked{{end}}> Active
+            </label>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Update Bill</button>
+            <a href="/bills" class="btn btn-link">Cancel</a>
+        </div>
+    </form>
+    {{else}}
+    <h2 style="margin-bottom: 1rem;">Add Bill</h2>
+    <form method="POST" action="/bills/create">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" placeholder="e.g., Rent" required>
+            </div>
+            <div class="form-group">
+                <label for="amount">Amount ($)</label>
+                <input type="number" id="amount" name="amount" step="0.01" min="0" placeholder="0.00" required>
+            </div>
+            <div class="form-group">
+                <label for="due_date">Due Date</label>
+                <input type="date" id="due_date" name="due_date" required>
+            </div>
+            <div class="form-group">
+                <label for="recurrence">Recurrence</label>
+                <select id="recurrence" name="recurrence">
+                    <option value="once">Once</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="biweekly">Biweekly</option>
+                    <option value="monthly" selected>Monthly</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Add Bill</button>
+        </div>
+    </form>
+    {{end}}
+</div>
+
+{{if .Bills}}
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Amount</th>
+            <th>Due Date</th>
+            <th>Recurrence</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{range .Bills}}
+        <tr>
+            <td>{{.Name}}</td>
+            <td>{{formatMoney .Amount}}</td>
+            <td>{{.DueDateFormatted}}</td>
+            <td>{{.Recurrence}}</td>
+            <td>
+                {{if .IsActive}}
+                <span class="badge badge-active">Active</span>
+                {{else}}
+                <span class="badge badge-inactive">Inactive</span>
+                {{end}}
+            </td>
+            <td>
+                <a href="/bills/{{.ID}}/edit" class="btn btn-link btn-sm">Edit</a>
+                <form method="POST" action="/bills/{{.ID}}/delete" style="display:inline" data-confirm="Delete this bill?">
+                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {{end}}
+    </tbody>
+</table>
+{{else}}
+{{if not .Editing}}
+<p style="color: var(--text-muted); text-align: center; padding: 2rem;">No bills yet. Add one above.</p>
+{{end}}
+{{end}}
+{{end}}

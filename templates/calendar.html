@@ -1,0 +1,37 @@
+{{define "content"}}
+<div class="calendar-nav">
+    <a href="/calendar?month={{.PrevMonth}}" class="btn btn-link">&larr; Previous</a>
+    <h2>{{.MonthName}}</h2>
+    <a href="/calendar?month={{.NextMonth}}" class="btn btn-link">Next &rarr;</a>
+</div>
+
+<div class="calendar-grid">
+    <div class="calendar-header">Sun</div>
+    <div class="calendar-header">Mon</div>
+    <div class="calendar-header">Tue</div>
+    <div class="calendar-header">Wed</div>
+    <div class="calendar-header">Thu</div>
+    <div class="calendar-header">Fri</div>
+    <div class="calendar-header">Sat</div>
+
+    {{range .Days}}
+    <div class="calendar-day{{if .IsToday}} today{{end}}{{if .OtherMonth}} other-month{{end}}">
+        <div class="day-number">{{.Date.Day}}</div>
+        {{range .Entries}}
+        <div class="calendar-entry {{.Type}}">
+            {{if eq .Type "income"}}+{{else}}-{{end}}{{formatMoney .Amount}} {{.Name}}
+        </div>
+        {{end}}
+        {{if .Entries}}
+        <div class="net {{if ge .NetImpact 0}}positive{{else}}negative{{end}}">
+            {{if ge .NetImpact 0}}+{{end}}{{formatMoney .NetImpact}}
+        </div>
+        {{end}}
+    </div>
+    {{end}}
+</div>
+
+<div style="text-align: center; margin-top: 1rem;">
+    <a href="/calendar?month={{.TodayMonth}}" class="btn btn-link">Today</a>
+</div>
+{{end}}
