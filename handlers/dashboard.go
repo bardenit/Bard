@@ -54,7 +54,7 @@ func DashboardHandler(w http.ResponseWriter, r *http.Request) {
 
 	var budgetStatuses []BudgetStatus
 	for _, cat := range categoryTree {
-		addBudgetStatuses(&budgetStatuses, cat, spending)
+		addBudgetStatuses(&budgetStatuses, cat, spending, 0)
 	}
 
 	// Convert to template-friendly format
@@ -107,6 +107,7 @@ type BudgetStatus struct {
 	Spent        int
 	Remaining    int
 	Percent      int
+	Depth        int
 }
 
 // categoryTotals returns the total allocated and spent for a category,
@@ -125,7 +126,7 @@ func categoryTotals(cat models.BudgetCategory, spending map[int]int) (allocated,
 	return
 }
 
-func addBudgetStatuses(statuses *[]BudgetStatus, cat models.BudgetCategory, spending map[int]int) {
+func addBudgetStatuses(statuses *[]BudgetStatus, cat models.BudgetCategory, spending map[int]int, depth int) {
 	allocated, spent := categoryTotals(cat, spending)
 
 	// Only show categories that have a budget (directly or via children)
@@ -144,9 +145,10 @@ func addBudgetStatuses(statuses *[]BudgetStatus, cat models.BudgetCategory, spen
 			Spent:        spent,
 			Remaining:    remaining,
 			Percent:      pct,
+			Depth:        depth,
 		})
 	}
 	for _, child := range cat.Children {
-		addBudgetStatuses(statuses, child, spending)
+		addBudgetStatuses(statuses, child, spending, depth+1)
 	}
 }

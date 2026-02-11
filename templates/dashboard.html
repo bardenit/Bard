@@ -83,8 +83,8 @@
         </thead>
         <tbody>
             {{range .BudgetStatuses}}
-            <tr>
-                <td>{{.CategoryName}}</td>
+            <tr{{if gt .Depth 0}} style="border-top: none;"{{end}}>
+                <td style="padding-left: {{if gt .Depth 0}}{{multiply .Depth 1.5}}rem{{else}}0{{end}};">{{if gt .Depth 0}}<span style="color: var(--text-muted); font-size: 0.9em;">{{.CategoryName}}</span>{{else}}<strong>{{.CategoryName}}</strong>{{end}}</td>
                 <td>{{formatMoney .Allocated}}</td>
                 <td>{{formatMoney .Spent}}</td>
                 <td class="{{if ge .Remaining 0}}positive{{else}}negative{{end}}">{{formatMoney .Remaining}}</td>

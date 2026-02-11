@@ -28,6 +28,7 @@ func InitTemplates(dir string) {
 		"formatMoney":   formatMoney,
 		"centsToDollar": centsToDollar,
 		"dict":          dict,
+		"multiply":      multiply,
 	}
 
 	// Pre-parse each page template paired with layout
@@ -164,6 +165,11 @@ func centsToDollar(cents interface{}) string {
 		return "0.00"
 	}
 	return fmt.Sprintf("%.2f", float64(c)/100)
+}
+
+// multiply returns a * b as a float for use in style calculations
+func multiply(a int, b float64) float64 {
+	return float64(a) * b
 }
 
 // dict creates a map from key-value pairs for use in templates
