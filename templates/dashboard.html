@@ -11,14 +11,20 @@
         <div class="value negative">{{formatMoney .MonthlyBills}}</div>
     </div>
     <div class="summary-card">
-        <div class="label">Net Available</div>
-        <div class="value {{if ge .NetAvailable 0}}positive{{else}}negative{{end}}">{{formatMoney .NetAvailable}}</div>
+        <div class="label">Balance</div>
+        {{if .HasBalance}}
+        <div class="value {{if ge .Balance 0}}positive{{else}}negative{{end}}">{{formatMoney .Balance}}</div>
+        {{else}}
+        <div class="value" style="color:var(--text-muted); font-size:1rem;">No transactions imported</div>
+        {{end}}
     </div>
     <div class="summary-card">
         <div class="label">Total Budgeted</div>
         <div class="value">{{formatMoney .TotalBudgeted}}</div>
+        {{if .HasBalance}}
         <div class="label" style="margin-top: 0.5rem;">Unallocated</div>
         <div class="value {{if ge .Unallocated 0}}positive{{else}}negative{{end}}" style="font-size: 1.1rem;">{{formatMoney .Unallocated}}</div>
+        {{end}}
     </div>
 </div>
 
@@ -67,10 +73,21 @@
 </div>
 
 {{if .BudgetStatuses}}
-<div class="card" style="margin-top: 1.5rem;">
-    <div class="section-header">
-        <h2>Budget Status</h2>
-    </div>
+<details class="card" style="margin-top: 1.5rem;" open>
+    <summary style="cursor:pointer; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; list-style:none;">
+        <h2 style="margin:0;">Budget Status — {{.SelectedLabel}}</h2>
+        <form method="GET" action="/" style="margin:0; display:flex; align-items:center; gap:0.5rem;">
+            <select name="__month_combined" id="month-select" style="font-size:0.9rem;"
+                onchange="var v=this.value.split('-'); this.form.elements['year'].value=v[0]; this.form.elements['month'].value=v[1]; this.form.submit();">
+                {{range .MonthOptions}}
+                <option value="{{.Year}}-{{.Month}}" {{if .Selected}}selected{{end}}>{{.Label}}</option>
+                {{end}}
+            </select>
+            <input type="hidden" name="year" value="{{.SelectedYear}}">
+            <input type="hidden" name="month" value="{{.SelectedMonth}}">
+        </form>
+    </summary>
+    <div style="margin-top:1rem;">
     <table>
         <thead>
             <tr>
@@ -97,6 +114,7 @@
             {{end}}
         </tbody>
     </table>
-</div>
+    </div>
+</details>
 {{end}}
 {{end}}

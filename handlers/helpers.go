@@ -65,9 +65,11 @@ func RenderTemplate(w http.ResponseWriter, name string, data PageData) {
 
 	// Merge Extra fields into a flat template data map
 	td := map[string]interface{}{
-		"Title":     data.Title,
-		"ActiveNav": data.ActiveNav,
-		"Flash":     data.Flash,
+		"Title":            data.Title,
+		"ActiveNav":        data.ActiveNav,
+		"Flash":            data.Flash,
+		"Version":          AppVersion,
+		"UpgradeAvailable": upgradeAvailable.Load(),
 	}
 	for k, v := range data.Extra {
 		td[k] = v

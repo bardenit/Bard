@@ -1,6 +1,9 @@
 package db
 
-import "log"
+import (
+	"log"
+	"strings"
+)
 
 var migrations = []string{
 	`CREATE TABLE IF NOT EXISTS bills (
@@ -71,11 +74,16 @@ var migrations = []string{
 		imported_at       TEXT    NOT NULL DEFAULT (datetime('now'))
 	)`,
 	`CREATE INDEX IF NOT EXISTS idx_expenditures_amount ON expenditures(amount)`,
+	`ALTER TABLE imported_transactions ADD COLUMN balance INTEGER`,
 }
 
 func RunMigrations() {
 	for _, m := range migrations {
 		if _, err := DB.Exec(m); err != nil {
+			// ALTER TABLE ADD COLUMN is not idempotent in SQLite; ignore duplicate column errors.
+			if strings.Contains(err.Error(), "duplicate column name") {
+				continue
+			}
 			log.Fatalf("Migration failed: %v\nSQL: %s", err, m)
 		}
 	}

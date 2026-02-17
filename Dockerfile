@@ -1,10 +1,11 @@
-FROM golang:1.23-alpine AS build
+FROM golang:1.25-alpine AS build
 RUN apk add --no-cache gcc musl-dev
 WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=1 go build -o /app -ldflags="-s -w" .
+ARG BUILD_TIME=unknown
+RUN CGO_ENABLED=1 go build -o /app -ldflags="-s -w -X main.BuildTime=${BUILD_TIME}" .
 
 FROM alpine:3.20
 RUN apk add --no-cache ca-certificates

@@ -143,6 +143,14 @@ func TransactionImportHandler(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
+		// Parse optional balance column (column 6).
+		var balance *int
+		if len(record) >= 7 {
+			if b, err := parseCents(strings.TrimSpace(record[6])); err == nil {
+				balance = &b
+			}
+		}
+
 		// Check for import duplicate (same description+date+amount already imported).
 		isDupImport, err := models.CheckImportDuplicate(description, processedDate, amount)
 		if err != nil {
@@ -168,7 +176,7 @@ func TransactionImportHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		if _, err := models.CreateImportedTransaction(accountName, processedDate, description, creditOrDebit, amount, autoCatID, isDup, sourceFile); err != nil {
+		if _, err := models.CreateImportedTransaction(accountName, processedDate, description, creditOrDebit, amount, balance, autoCatID, isDup, sourceFile); err != nil {
 			log.Printf("CreateImportedTransaction error: %v", err)
 			continue
 		}

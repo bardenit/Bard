@@ -15,6 +15,7 @@ type ImportedTransaction struct {
 	Description     string
 	CreditOrDebit   string
 	Amount          int
+	Balance         *int
 	CategoryID      *int
 	AutoCategoryID  *int
 	CategoryName    string
@@ -48,7 +49,7 @@ func ListPendingTransactions() ([]ImportedTransaction, error) {
 	rows, err := db.DB.Query(`
 		SELECT
 			t.id, t.account_name, t.processed_date, t.description, t.credit_or_debit,
-			t.amount, t.category_id, t.auto_category_id,
+			t.amount, t.balance, t.category_id, t.auto_category_id,
 			COALESCE(bc1.name, ''), COALESCE(bc2.name, ''),
 			t.is_duplicate_flag, t.is_confirmed, t.is_dismissed,
 			t.source_file, t.imported_at
@@ -66,15 +67,19 @@ func ListPendingTransactions() ([]ImportedTransaction, error) {
 	var items []ImportedTransaction
 	for rows.Next() {
 		var t ImportedTransaction
-		var catID, autoCatID sql.NullInt64
+		var balance, catID, autoCatID sql.NullInt64
 		if err := rows.Scan(
 			&t.ID, &t.AccountName, &t.ProcessedDate, &t.Description, &t.CreditOrDebit,
-			&t.Amount, &catID, &autoCatID,
+			&t.Amount, &balance, &catID, &autoCatID,
 			&t.CategoryName, &t.AutoCatName,
 			&t.IsDuplicateFlag, &t.IsConfirmed, &t.IsDismissed,
 			&t.SourceFile, &t.ImportedAt,
 		); err != nil {
 			return nil, err
+		}
+		if balance.Valid {
+			v := int(balance.Int64)
+			t.Balance = &v
 		}
 		if catID.Valid {
 			v := int(catID.Int64)
@@ -94,7 +99,7 @@ func ListConfirmedTransactions(limit int) ([]ImportedTransaction, error) {
 	rows, err := db.DB.Query(`
 		SELECT
 			t.id, t.account_name, t.processed_date, t.description, t.credit_or_debit,
-			t.amount, t.category_id, t.auto_category_id,
+			t.amount, t.balance, t.category_id, t.auto_category_id,
 			COALESCE(bc1.name, ''), COALESCE(bc2.name, ''),
 			t.is_duplicate_flag, t.is_confirmed, t.is_dismissed,
 			t.source_file, t.imported_at
@@ -113,15 +118,19 @@ func ListConfirmedTransactions(limit int) ([]ImportedTransaction, error) {
 	var items []ImportedTransaction
 	for rows.Next() {
 		var t ImportedTransaction
-		var catID, autoCatID sql.NullInt64
+		var balance, catID, autoCatID sql.NullInt64
 		if err := rows.Scan(
 			&t.ID, &t.AccountName, &t.ProcessedDate, &t.Description, &t.CreditOrDebit,
-			&t.Amount, &catID, &autoCatID,
+			&t.Amount, &balance, &catID, &autoCatID,
 			&t.CategoryName, &t.AutoCatName,
 			&t.IsDuplicateFlag, &t.IsConfirmed, &t.IsDismissed,
 			&t.SourceFile, &t.ImportedAt,
 		); err != nil {
 			return nil, err
+		}
+		if balance.Valid {
+			v := int(balance.Int64)
+			t.Balance = &v
 		}
 		if catID.Valid {
 			v := int(catID.Int64)
@@ -139,11 +148,11 @@ func ListConfirmedTransactions(limit int) ([]ImportedTransaction, error) {
 // GetTransaction returns a single imported transaction by ID.
 func GetTransaction(id int) (ImportedTransaction, error) {
 	var t ImportedTransaction
-	var catID, autoCatID sql.NullInt64
+	var balance, catID, autoCatID sql.NullInt64
 	err := db.DB.QueryRow(`
 		SELECT
 			t.id, t.account_name, t.processed_date, t.description, t.credit_or_debit,
-			t.amount, t.category_id, t.auto_category_id,
+			t.amount, t.balance, t.category_id, t.auto_category_id,
 			COALESCE(bc1.name, ''), COALESCE(bc2.name, ''),
 			t.is_duplicate_flag, t.is_confirmed, t.is_dismissed,
 			t.source_file, t.imported_at
@@ -153,13 +162,17 @@ func GetTransaction(id int) (ImportedTransaction, error) {
 		WHERE t.id = ?
 	`, id).Scan(
 		&t.ID, &t.AccountName, &t.ProcessedDate, &t.Description, &t.CreditOrDebit,
-		&t.Amount, &catID, &autoCatID,
+		&t.Amount, &balance, &catID, &autoCatID,
 		&t.CategoryName, &t.AutoCatName,
 		&t.IsDuplicateFlag, &t.IsConfirmed, &t.IsDismissed,
 		&t.SourceFile, &t.ImportedAt,
 	)
 	if err == sql.ErrNoRows {
 		return t, sql.ErrNoRows
+	}
+	if balance.Valid {
+		v := int(balance.Int64)
+		t.Balance = &v
 	}
 	if catID.Valid {
 		v := int(catID.Int64)
@@ -172,28 +185,47 @@ func GetTransaction(id int) (ImportedTransaction, error) {
 	return t, err
 }
 
+// GetLatestBalance returns the account balance from the most recent imported transaction
+// that has a balance value. Returns 0, false if none is available.
+func GetLatestBalance() (int, bool, error) {
+	var balance int
+	err := db.DB.QueryRow(`
+		SELECT balance FROM imported_transactions
+		WHERE balance IS NOT NULL
+		ORDER BY processed_date DESC, id DESC
+		LIMIT 1
+	`).Scan(&balance)
+	if err == sql.ErrNoRows {
+		return 0, false, nil
+	}
+	if err != nil {
+		return 0, false, err
+	}
+	return balance, true, nil
+}
+
 // CreateImportedTransaction inserts a new imported transaction row.
-func CreateImportedTransaction(accountName, processedDate, description, creditOrDebit string, amount int, autoCatID *int, isDuplicate bool, sourceFile string) (int64, error) {
+func CreateImportedTransaction(accountName, processedDate, description, creditOrDebit string, amount int, balance *int, autoCatID *int, isDuplicate bool, sourceFile string) (int64, error) {
 	dupFlag := 0
 	if isDuplicate {
 		dupFlag = 1
 	}
 
-	var result sql.Result
-	var err error
-	if autoCatID != nil {
-		result, err = db.DB.Exec(`
-			INSERT INTO imported_transactions
-				(account_name, processed_date, description, credit_or_debit, amount, auto_category_id, is_duplicate_flag, source_file)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-		`, accountName, processedDate, description, creditOrDebit, amount, *autoCatID, dupFlag, sourceFile)
-	} else {
-		result, err = db.DB.Exec(`
-			INSERT INTO imported_transactions
-				(account_name, processed_date, description, credit_or_debit, amount, is_duplicate_flag, source_file)
-			VALUES (?, ?, ?, ?, ?, ?, ?)
-		`, accountName, processedDate, description, creditOrDebit, amount, dupFlag, sourceFile)
+	var balanceVal interface{}
+	if balance != nil {
+		balanceVal = *balance
 	}
+
+	var autoCatVal interface{}
+	if autoCatID != nil {
+		autoCatVal = *autoCatID
+	}
+
+	result, err := db.DB.Exec(`
+		INSERT INTO imported_transactions
+			(account_name, processed_date, description, credit_or_debit, amount, balance, auto_category_id, is_duplicate_flag, source_file)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+	`, accountName, processedDate, description, creditOrDebit, amount, balanceVal, autoCatVal, dupFlag, sourceFile)
 	if err != nil {
 		return 0, err
 	}

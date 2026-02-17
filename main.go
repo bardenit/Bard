@@ -9,6 +9,9 @@ import (
 	"github.com/bardenit/Bard/handlers"
 )
 
+// BuildTime is injected at build time via -ldflags "-X main.BuildTime=<RFC3339 timestamp>".
+var BuildTime = "unknown"
+
 func main() {
 	db.Init()
 	defer db.DB.Close()
@@ -18,6 +21,9 @@ func main() {
 		templateDir = "templates"
 	}
 	handlers.InitTemplates(templateDir)
+
+	// Start background upgrade checker using the embedded build timestamp.
+	handlers.StartUpgradeChecker(BuildTime)
 
 	staticDir := os.Getenv("STATIC_DIR")
 	if staticDir == "" {
@@ -32,7 +38,7 @@ func main() {
 	// Dashboard
 	mux.HandleFunc("GET /{$}", handlers.DashboardHandler)
 
-	// Bills — single handler routes all /bills paths
+	// Bills
 	mux.HandleFunc("/bills", handlers.BillsRouter)
 	mux.HandleFunc("/bills/{path...}", handlers.BillsRouter)
 
@@ -60,9 +66,8 @@ func main() {
 		port = "8080"
 	}
 
-	log.Printf("Server starting on :%s", port)
+	log.Printf("Server starting on :%s (v%s, built %s)", port, handlers.AppVersion, BuildTime)
 	if err := http.ListenAndServe(":"+port, mux); err != nil {
 		log.Fatal(err)
 	}
 }
-
