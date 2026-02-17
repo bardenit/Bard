@@ -14,12 +14,17 @@
         </div>
         <div class="nav-links">
             <a href="/" {{if eq .ActiveNav "dashboard"}}class="active"{{end}}>Dashboard</a>
-            <a href="/bills" {{if eq .ActiveNav "bills"}}class="active"{{end}}>Bills</a>
-            <a href="/income" {{if eq .ActiveNav "income"}}class="active"{{end}}>Income</a>
-            <a href="/budgets" {{if eq .ActiveNav "budgets"}}class="active"{{end}}>Budgets</a>
-            <a href="/expenditures" {{if eq .ActiveNav "expenditures"}}class="active"{{end}}>Expenditures</a>
             <a href="/calendar" {{if eq .ActiveNav "calendar"}}class="active"{{end}}>Calendar</a>
-            <a href="/transactions" {{if eq .ActiveNav "transactions"}}class="active"{{end}}>Transactions</a>
+            <div class="nav-dropdown">
+                <span class="nav-dropdown-toggle {{if or (eq .ActiveNav "bills") (eq .ActiveNav "income") (eq .ActiveNav "budgets") (eq .ActiveNav "expenditures") (eq .ActiveNav "transactions")}}active{{end}}">Settings &#x25BE;</span>
+                <div class="nav-dropdown-menu">
+                    <a href="/bills" {{if eq .ActiveNav "bills"}}class="active"{{end}}>Bills</a>
+                    <a href="/income" {{if eq .ActiveNav "income"}}class="active"{{end}}>Income</a>
+                    <a href="/budgets" {{if eq .ActiveNav "budgets"}}class="active"{{end}}>Budgets</a>
+                    <a href="/expenditures" {{if eq .ActiveNav "expenditures"}}class="active"{{end}}>Expenditures</a>
+                    <a href="/transactions" {{if eq .ActiveNav "transactions"}}class="active"{{end}}>Transactions</a>
+                </div>
+            </div>
         </div>
     </nav>
     {{if .Flash}}
