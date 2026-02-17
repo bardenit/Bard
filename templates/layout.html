@@ -8,7 +8,10 @@
 </head>
 <body>
     <nav class="nav">
-        <div class="nav-brand">Budget <span style="font-size: 0.6em; color: var(--text-muted); font-weight: normal;">v{{.Version}}</span></div>
+        <div class="nav-brand">
+            Budget <span style="font-size: 0.6em; color: var(--text-muted); font-weight: normal;">v{{.Version}}</span>
+            {{if .LatestVersion}}<a href="https://github.com/bardenit/Bard" target="_blank" rel="noopener" style="font-size: 0.6em; font-weight: normal; color: #856404; text-decoration: none; margin-left: 0.25em;">&#x2192; {{.LatestVersion}}</a>{{end}}
+        </div>
         <div class="nav-links">
             <a href="/" {{if eq .ActiveNav "dashboard"}}class="active"{{end}}>Dashboard</a>
             <a href="/bills" {{if eq .ActiveNav "bills"}}class="active"{{end}}>Bills</a>
@@ -19,13 +22,6 @@
             <a href="/transactions" {{if eq .ActiveNav "transactions"}}class="active"{{end}}>Transactions</a>
         </div>
     </nav>
-    {{if .UpgradeAvailable}}
-    <div class="upgrade-banner">
-        &#x2B06; A new version of Budget is available &mdash;
-        <a href="https://hub.docker.com/r/jbarden75/budget" target="_blank" rel="noopener">update your Docker image</a>
-        to get the latest features.
-    </div>
-    {{end}}
     {{if .Flash}}
     <div class="flash">{{.Flash}}</div>
     {{end}}

@@ -68,8 +68,8 @@ func RenderTemplate(w http.ResponseWriter, name string, data PageData) {
 		"Title":            data.Title,
 		"ActiveNav":        data.ActiveNav,
 		"Flash":            data.Flash,
-		"Version":          AppVersion,
-		"UpgradeAvailable": upgradeAvailable.Load(),
+		"Version":       AppVersion,
+		"LatestVersion": LatestVersion(),
 	}
 	for k, v := range data.Extra {
 		td[k] = v

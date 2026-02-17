@@ -1,70 +1,63 @@
 package handlers
 
 import (
-	"encoding/json"
+	"io"
 	"log"
 	"net/http"
+	"strings"
 	"sync/atomic"
 	"time"
 )
 
 // AppVersion is the current application version, displayed in the nav.
-const AppVersion = "1.3"
+const AppVersion = "1.4"
 
-// upgradeAvailable is set to 1 by the background checker when a newer commit exists on GitHub.
-var upgradeAvailable atomic.Bool
+// latestVersion holds the newest version string fetched from GitHub.
+// Empty means no upgrade is available (or check hasn't run yet).
+var latestVersion atomic.Value // stores string
 
-// StartUpgradeChecker launches a background goroutine that periodically checks GitHub
-// for newer commits. buildTime must be an RFC3339 timestamp injected at build time;
-// if it is "unknown" or empty the checker does nothing (local dev mode).
+// LatestVersion returns the latest available version if newer than AppVersion, else "".
+func LatestVersion() string {
+	v, _ := latestVersion.Load().(string)
+	return v
+}
+
+// StartUpgradeChecker launches a background goroutine that checks GitHub every 5 minutes
+// for a newer version. buildTime must be a non-empty, non-"unknown" value to activate.
 func StartUpgradeChecker(buildTime string) {
 	if buildTime == "" || buildTime == "unknown" {
 		return
 	}
 	go func() {
-		// Check immediately, then every hour.
-		checkForUpgrade(buildTime)
-		for range time.Tick(1 * time.Hour) {
-			checkForUpgrade(buildTime)
+		checkForUpgrade()
+		for range time.Tick(5 * time.Minute) {
+			checkForUpgrade()
 		}
 	}()
 }
 
-func checkForUpgrade(buildTime string) {
-	built, err := time.Parse(time.RFC3339, buildTime)
-	if err != nil {
-		return
-	}
-
+func checkForUpgrade() {
 	client := &http.Client{Timeout: 10 * time.Second}
-	req, err := http.NewRequest("GET", "https://api.github.com/repos/bardenit/Bard/commits/main", nil)
-	if err != nil {
-		return
-	}
-	req.Header.Set("Accept", "application/vnd.github.v3+json")
-
-	resp, err := client.Do(req)
+	resp, err := client.Get("https://raw.githubusercontent.com/bardenit/Bard/main/VERSION")
 	if err != nil {
 		log.Printf("Upgrade check failed: %v", err)
 		return
 	}
 	defer resp.Body.Close()
 
-	var result struct {
-		Commit struct {
-			Committer struct {
-				Date string `json:"date"`
-			} `json:"committer"`
-		} `json:"commit"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return
-	}
-
-	latest, err := time.Parse(time.RFC3339, result.Commit.Committer.Date)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return
 	}
 
-	upgradeAvailable.Store(latest.After(built))
+	fetched := strings.TrimSpace(string(body))
+	if fetched == "" {
+		return
+	}
+
+	if fetched != AppVersion {
+		latestVersion.Store(fetched)
+	} else {
+		latestVersion.Store("")
+	}
 }
