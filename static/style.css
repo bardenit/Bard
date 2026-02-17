@@ -31,11 +31,17 @@ body {
 .nav {
     background: var(--surface);
     border-bottom: 1px solid var(--border);
+    height: 56px;
+}
+
+.nav-inner {
+    max-width: 1000px;
+    margin: 0 auto;
     padding: 0 1.5rem;
     display: flex;
     align-items: center;
     gap: 2rem;
-    height: 56px;
+    height: 100%;
 }
 
 .nav-brand {

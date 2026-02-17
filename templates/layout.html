@@ -8,13 +8,15 @@
 </head>
 <body>
     <nav class="nav">
-        <div class="nav-brand">
-            Budget <span style="font-size: 0.6em; color: var(--text-muted); font-weight: normal;">v{{.Version}}</span>
-            {{if .LatestVersion}}<a href="https://github.com/bardenit/Bard" target="_blank" rel="noopener" style="font-size: 0.6em; font-weight: normal; color: #856404; text-decoration: none; margin-left: 0.25em;">&#x2192; {{.LatestVersion}}</a>{{end}}
-        </div>
-        <div class="nav-links">
-            <a href="/" {{if eq .ActiveNav "dashboard"}}class="active"{{end}}>Dashboard</a>
-            <a href="/calendar" {{if eq .ActiveNav "calendar"}}class="active"{{end}}>Calendar</a>
+        <div class="nav-inner">
+            <div class="nav-brand">
+                Budget <span style="font-size: 0.6em; color: var(--text-muted); font-weight: normal;">v{{.Version}}</span>
+                {{if .LatestVersion}}<a href="https://github.com/bardenit/Bard" target="_blank" rel="noopener" style="font-size: 0.6em; font-weight: normal; color: #856404; text-decoration: none; margin-left: 0.25em;">&#x2192; {{.LatestVersion}}</a>{{end}}
+            </div>
+            <div class="nav-links">
+                <a href="/" {{if eq .ActiveNav "dashboard"}}class="active"{{end}}>Dashboard</a>
+                <a href="/calendar" {{if eq .ActiveNav "calendar"}}class="active"{{end}}>Calendar</a>
+            </div>
             <div class="nav-dropdown nav-dropdown-right">
                 <span class="nav-dropdown-toggle {{if or (eq .ActiveNav "bills") (eq .ActiveNav "income") (eq .ActiveNav "budgets") (eq .ActiveNav "expenditures") (eq .ActiveNav "transactions")}}active{{end}}">Options &#x25BE;</span>
                 <div class="nav-dropdown-menu">

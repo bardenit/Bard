@@ -10,7 +10,7 @@ import (
 )
 
 // AppVersion is the current application version, displayed in the nav.
-const AppVersion = "1.8"
+const AppVersion = "1.9"
 
 // latestVersion holds the newest version string fetched from GitHub.
 // Empty means no upgrade is available (or check hasn't run yet).

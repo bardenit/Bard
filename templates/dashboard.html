@@ -3,10 +3,6 @@
 
 <div class="summary-grid">
     <div class="summary-card">
-        <div class="label">Monthly Income</div>
-        <div class="value positive">{{formatMoney .MonthlyIncome}}</div>
-    </div>
-    <div class="summary-card">
         <div class="label">Upcoming Bills</div>
         <div class="value negative">{{formatMoney .UpcomingBillsTotal}}</div>
         <div class="label" style="margin-top:0.4rem;">before next check on {{.NextPaycheckDate}}</div>
@@ -26,14 +22,6 @@
             </div>
             <button type="submit" class="btn btn-small btn-secondary">Set</button>
         </form>
-    </div>
-    <div class="summary-card">
-        <div class="label">Total Budgeted</div>
-        <div class="value">{{formatMoney .TotalBudgeted}}</div>
-        {{if .HasBalance}}
-        <div class="label" style="margin-top: 0.5rem;">Unallocated</div>
-        <div class="value {{if ge .Unallocated 0}}positive{{else}}negative{{end}}" style="font-size: 1.1rem;">{{formatMoney .Unallocated}}</div>
-        {{end}}
     </div>
 </div>
 
@@ -82,19 +70,25 @@
 </div>
 
 {{if .BudgetStatuses}}
-<details class="card" style="margin-top: 1.5rem;" open>
+<details class="card" style="margin-top: 1.5rem;">
     <summary style="cursor:pointer; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; list-style:none;">
         <h2 style="margin:0;">Budget Status — {{.SelectedLabel}}</h2>
-        <form method="GET" action="/" style="margin:0; display:flex; align-items:center; gap:0.5rem;">
-            <select name="__month_combined" id="month-select" style="font-size:0.9rem;"
-                onchange="var v=this.value.split('-'); this.form.elements['year'].value=v[0]; this.form.elements['month'].value=v[1]; this.form.submit();">
-                {{range .MonthOptions}}
-                <option value="{{.Year}}-{{.Month}}" {{if .Selected}}selected{{end}}>{{.Label}}</option>
-                {{end}}
-            </select>
-            <input type="hidden" name="year" value="{{.SelectedYear}}">
-            <input type="hidden" name="month" value="{{.SelectedMonth}}">
-        </form>
+        <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+            <span style="font-size:0.85rem; color:var(--text-muted);">Budgeted: <strong>{{formatMoney .TotalBudgeted}}</strong></span>
+            {{if .HasBalance}}
+            <span style="font-size:0.85rem; color:var(--text-muted);">Unallocated: <strong style="color:{{if ge .Unallocated 0}}var(--success){{else}}var(--danger){{end}};">{{formatMoney .Unallocated}}</strong></span>
+            {{end}}
+            <form method="GET" action="/" style="margin:0; display:flex; align-items:center; gap:0.5rem;">
+                <select name="__month_combined" id="month-select" style="font-size:0.9rem;"
+                    onchange="var v=this.value.split('-'); this.form.elements['year'].value=v[0]; this.form.elements['month'].value=v[1]; this.form.submit();">
+                    {{range .MonthOptions}}
+                    <option value="{{.Year}}-{{.Month}}" {{if .Selected}}selected{{end}}>{{.Label}}</option>
+                    {{end}}
+                </select>
+                <input type="hidden" name="year" value="{{.SelectedYear}}">
+                <input type="hidden" name="month" value="{{.SelectedMonth}}">
+            </form>
+        </div>
     </summary>
     <div style="margin-top:1rem;">
     <table>
