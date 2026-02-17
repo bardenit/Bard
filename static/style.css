@@ -546,7 +546,8 @@ h1 {
     padding: 0.25rem 0;
 }
 
-.nav-dropdown:hover .nav-dropdown-menu {
+.nav-dropdown:hover .nav-dropdown-menu,
+.nav-dropdown.open .nav-dropdown-menu {
     display: block;
 }
 
@@ -563,6 +564,27 @@ h1 {
 .nav-dropdown-menu a.active {
     background: var(--bg);
     color: var(--primary);
+}
+
+/* Upcoming bills paycheck separator */
+.upcoming-separator {
+    list-style: none;
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    padding: 0.35rem 0;
+    border-top: 1px dashed var(--border);
+    border-bottom: 1px dashed var(--border);
+    margin: 0.25rem 0;
+}
+
+.btn-success {
+    background: var(--success);
+    color: white;
+}
+
+.btn-success:hover {
+    background: #146c43;
 }
 
 .upgrade-banner {

@@ -33,7 +33,10 @@ func ExpendituresRouter(w http.ResponseWriter, r *http.Request) {
 }
 
 func ExpendituresHandler(w http.ResponseWriter, r *http.Request) {
-	expenditures, err := models.ListExpenditures()
+	filterMonth := r.URL.Query().Get("month")
+	filterCatID, _ := strconv.Atoi(r.URL.Query().Get("category_id"))
+
+	expenditures, err := models.ListExpendituresFiltered(filterMonth, filterCatID)
 	if err != nil {
 		log.Printf("Error listing expenditures: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -47,14 +50,29 @@ func ExpendituresHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	monthsWithData, err := models.MonthsWithSpending()
+	if err != nil {
+		log.Printf("Error getting months with spending: %v", err)
+	}
+
+	// Build a total for the current filter view.
+	total := 0
+	for _, e := range expenditures {
+		total += e.Amount
+	}
+
 	data := PageData{
 		Title:     "Expenditures",
 		ActiveNav: "expenditures",
 		Flash:     GetFlash(w, r),
 	}
 	data.Extra = map[string]interface{}{
-		"Expenditures": expenditures,
-		"Categories":   categories,
+		"Expenditures":    expenditures,
+		"Categories":      categories,
+		"MonthsWithData":  monthsWithData,
+		"FilterMonth":     filterMonth,
+		"FilterCategoryID": filterCatID,
+		"FilterTotal":     total,
 	}
 	RenderTemplate(w, "expenditures.html", data)
 }

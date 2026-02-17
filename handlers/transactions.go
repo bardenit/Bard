@@ -31,6 +31,8 @@ func TransactionsRouter(w http.ResponseWriter, r *http.Request) {
 		TransactionRuleUpdateHandler(w, r)
 	case strings.HasSuffix(path, "/confirm") && r.Method == http.MethodPost:
 		TransactionConfirmHandler(w, r)
+	case strings.HasSuffix(path, "/confirm-credit") && r.Method == http.MethodPost:
+		TransactionConfirmCreditHandler(w, r)
 	case strings.HasSuffix(path, "/dismiss") && r.Method == http.MethodPost:
 		TransactionDismissHandler(w, r)
 	default:
@@ -257,6 +259,25 @@ func TransactionDismissHandler(w http.ResponseWriter, r *http.Request) {
 	if err := models.DismissTransaction(id); err != nil {
 		log.Printf("DismissTransaction error: %v", err)
 		SetFlash(w, "Failed to dismiss transaction.")
+	}
+	http.Redirect(w, r, "/transactions", http.StatusSeeOther)
+}
+
+// TransactionConfirmCreditHandler confirms a credit transaction, adding its amount to balance.
+func TransactionConfirmCreditHandler(w http.ResponseWriter, r *http.Request) {
+	idStr := strings.TrimPrefix(r.URL.Path, "/transactions/")
+	idStr = strings.TrimSuffix(idStr, "/confirm-credit")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	if err := models.ConfirmCredit(id); err != nil {
+		log.Printf("ConfirmCredit error: %v", err)
+		SetFlash(w, "Failed to confirm credit.")
+	} else {
+		SetFlash(w, "Credit confirmed.")
 	}
 	http.Redirect(w, r, "/transactions", http.StatusSeeOther)
 }

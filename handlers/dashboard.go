@@ -129,13 +129,18 @@ func DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		addBudgetStatuses(&budgetStatuses, cat, spending, 0)
 	}
 
-	var billItems []UpcomingItem
+	var billsBefore, billsAfter []UpcomingItem
 	for _, o := range upcomingBills {
-		billItems = append(billItems, UpcomingItem{
+		item := UpcomingItem{
 			Name:   o.Name,
 			Date:   o.Date.Format("Jan 2"),
 			Amount: o.Amount,
-		})
+		}
+		if !o.Date.After(nextPaycheck) {
+			billsBefore = append(billsBefore, item)
+		} else {
+			billsAfter = append(billsAfter, item)
+		}
 	}
 
 	var depositItems []UpcomingItem
@@ -161,7 +166,8 @@ func DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		"HasBalance":          hasBalance,
 		"TotalBudgeted":       totalBudgeted,
 		"Unallocated":         unallocated,
-		"UpcomingBills":       billItems,
+		"BillsBefore":         billsBefore,
+		"BillsAfter":          billsAfter,
 		"UpcomingDeposits":    depositItems,
 		"BudgetStatuses":      budgetStatuses,
 		"MonthOptions":        monthOptions,

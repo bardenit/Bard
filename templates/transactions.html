@@ -96,6 +96,10 @@
                 <form id="confirm-{{.ID}}" method="POST" action="/transactions/{{.ID}}/confirm" style="display:inline;">
                     <button type="submit" class="btn btn-small">Confirm</button>
                 </form>
+                {{else}}
+                <form method="POST" action="/transactions/{{.ID}}/confirm-credit" style="display:inline;">
+                    <button type="submit" class="btn btn-small btn-success">Confirm Income</button>
+                </form>
                 {{end}}
                 <form method="POST" action="/transactions/{{.ID}}/dismiss" style="display:inline;">
                     <button type="submit" class="btn btn-small btn-secondary">Dismiss</button>

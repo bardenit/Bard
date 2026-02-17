@@ -27,6 +27,42 @@ func (e Expenditure) DateFormatted() string {
 	return t.Format("Jan 2, 2006")
 }
 
+// ListExpendituresFiltered returns expenditures optionally filtered by month
+// ("YYYY-MM") and/or category ID (0 = all).
+func ListExpendituresFiltered(month string, categoryID int) ([]Expenditure, error) {
+	q := `
+		SELECT e.id, e.description, e.amount, e.category_id, bc.name, e.date, e.created_at, e.updated_at
+		FROM expenditures e
+		JOIN budget_categories bc ON bc.id = e.category_id
+		WHERE 1=1`
+	var args []interface{}
+	if month != "" {
+		q += " AND strftime('%Y-%m', e.date) = ?"
+		args = append(args, month)
+	}
+	if categoryID > 0 {
+		q += " AND e.category_id = ?"
+		args = append(args, categoryID)
+	}
+	q += " ORDER BY e.date DESC"
+
+	rows, err := db.DB.Query(q, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var items []Expenditure
+	for rows.Next() {
+		var e Expenditure
+		if err := rows.Scan(&e.ID, &e.Description, &e.Amount, &e.CategoryID, &e.CategoryName, &e.Date, &e.CreatedAt, &e.UpdatedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, e)
+	}
+	return items, rows.Err()
+}
+
 func ListExpenditures() ([]Expenditure, error) {
 	rows, err := db.DB.Query(`
 		SELECT e.id, e.description, e.amount, e.category_id, bc.name, e.date, e.created_at, e.updated_at

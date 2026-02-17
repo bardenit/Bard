@@ -66,7 +66,39 @@
     {{end}}
 </div>
 
+<!-- Filter bar -->
+{{if not .Editing}}
+<form method="GET" action="/expenditures" style="display:flex; gap:0.75rem; align-items:flex-end; flex-wrap:wrap; margin-bottom:1rem;">
+    <div>
+        <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:0.2rem;">Month</label>
+        <select name="month" style="font-size:0.9rem;">
+            <option value="">All months</option>
+            {{range .MonthsWithData}}
+            <option value="{{.Format "2006-01"}}" {{if eq ($.FilterMonth) (.Format "2006-01")}}selected{{end}}>{{.Format "January 2006"}}</option>
+            {{end}}
+        </select>
+    </div>
+    <div>
+        <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:0.2rem;">Category</label>
+        <select name="category_id" style="font-size:0.9rem;">
+            <option value="0">All categories</option>
+            {{range .Categories}}
+            <option value="{{.ID}}" {{if eq $.FilterCategoryID .ID}}selected{{end}}>{{.Name}}</option>
+            {{end}}
+        </select>
+    </div>
+    <button type="submit" class="btn btn-small btn-secondary">Filter</button>
+    {{if or .FilterMonth .FilterCategoryID}}
+    <a href="/expenditures" class="btn btn-small btn-secondary">Clear</a>
+    {{end}}
+    {{if .FilterTotal}}
+    <span style="font-size:0.9rem; color:var(--text-muted); margin-left:auto;">Total: <strong>{{formatMoney .FilterTotal}}</strong></span>
+    {{end}}
+</form>
+{{end}}
+
 {{if .Expenditures}}
+<div class="table-wrapper">
 <table>
     <thead>
         <tr>
@@ -94,6 +126,7 @@
         {{end}}
     </tbody>
 </table>
+</div>
 {{else}}
 {{if not .Editing}}
 <p style="color: var(--text-muted); text-align: center; padding: 2rem;">No expenditures yet. Add one above.</p>

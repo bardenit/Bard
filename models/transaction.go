@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"fmt"
 	"strings"
 
 	"github.com/bardenit/Bard/db"
@@ -215,7 +216,8 @@ func CreateImportedTransaction(accountName, processedDate, description, creditOr
 }
 
 // ConfirmTransaction creates an expenditure and marks the transaction as confirmed.
-// Both operations run in a single DB transaction.
+// Both operations run in a single DB transaction. On success, the account balance
+// is automatically decremented by the transaction amount (if a balance is set).
 func ConfirmTransaction(id, categoryID int) error {
 	tx, err := db.DB.Begin()
 	if err != nil {
@@ -233,12 +235,12 @@ func ConfirmTransaction(id, categoryID int) error {
 		return err
 	}
 
-	// Only create an expenditure for debits.
+	// Only create an expenditure for debits, using a cleaned description.
 	if creditOrDebit == "Debit" {
 		if _, err = tx.Exec(`
 			INSERT INTO expenditures (description, amount, category_id, date)
 			VALUES (?, ?, ?, ?)
-		`, description, amount, categoryID, processedDate); err != nil {
+		`, CleanDescription(description), amount, categoryID, processedDate); err != nil {
 			tx.Rollback()
 			return err
 		}
@@ -253,7 +255,48 @@ func ConfirmTransaction(id, categoryID int) error {
 		return err
 	}
 
-	return tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	// Auto-update balance: debits decrease it, credits increase it.
+	balance, hasBalance, berr := GetManualBalance()
+	if berr == nil && hasBalance {
+		if creditOrDebit == "Debit" {
+			_ = SetManualBalance(balance - amount)
+		} else {
+			_ = SetManualBalance(balance + amount)
+		}
+	}
+	return nil
+}
+
+// ConfirmCredit marks a credit transaction as confirmed income and adds its
+// amount to the stored account balance.
+func ConfirmCredit(id int) error {
+	var amount int
+	var creditOrDebit string
+	if err := db.DB.QueryRow(`
+		SELECT amount, credit_or_debit FROM imported_transactions WHERE id = ?
+	`, id).Scan(&amount, &creditOrDebit); err != nil {
+		return err
+	}
+	if creditOrDebit != "Credit" {
+		return fmt.Errorf("transaction %d is not a credit", id)
+	}
+
+	if _, err := db.DB.Exec(`
+		UPDATE imported_transactions SET is_confirmed = 1 WHERE id = ?
+	`, id); err != nil {
+		return err
+	}
+
+	// Add credit amount to balance.
+	balance, hasBalance, berr := GetManualBalance()
+	if berr == nil && hasBalance {
+		_ = SetManualBalance(balance + amount)
+	}
+	return nil
 }
 
 // DismissTransaction marks a transaction as dismissed.
@@ -320,10 +363,11 @@ func ConfirmAllAuto() (int, error) {
 		return 0, err
 	}
 
+	totalAmount := 0
 	for _, p := range items {
 		if _, err := tx.Exec(`
 			INSERT INTO expenditures (description, amount, category_id, date) VALUES (?, ?, ?, ?)
-		`, p.desc, p.amount, p.catID, p.date); err != nil {
+		`, CleanDescription(p.desc), p.amount, p.catID, p.date); err != nil {
 			tx.Rollback()
 			return 0, err
 		}
@@ -333,10 +377,19 @@ func ConfirmAllAuto() (int, error) {
 			tx.Rollback()
 			return 0, err
 		}
+		totalAmount += p.amount
 	}
 
 	if err := tx.Commit(); err != nil {
 		return 0, err
+	}
+
+	// Subtract total confirmed amount from balance.
+	if totalAmount > 0 {
+		balance, hasBalance, berr := GetManualBalance()
+		if berr == nil && hasBalance {
+			_ = SetManualBalance(balance - totalAmount)
+		}
 	}
 	return len(items), nil
 }
@@ -426,6 +479,67 @@ func AutoCategorize(description string) (*int, error) {
 		}
 	}
 	return nil, rows.Err()
+}
+
+// CleanDescription strips common bank prefixes and returns a readable merchant
+// name (up to 3 meaningful words, uppercased) suitable for expenditure records.
+func CleanDescription(description string) string {
+	s := strings.TrimSpace(description)
+	upper := strings.ToUpper(s)
+
+	posPrefix := "WITHDRAWAL POS #"
+	prefixes := []string{
+		"WITHDRAWAL BILL PAYMENT BILL PAID-",
+		"WITHDRAWAL VISA DEBIT ",
+		"WITHDRAWAL ACH ",
+		"WITHDRAWAL TRANSFER TO ",
+		posPrefix,
+		"WITHDRAWAL ",
+		"DEPOSIT ACH ",
+		"DEPOSIT ",
+	}
+
+	matchedPOS := false
+	for _, p := range prefixes {
+		if strings.HasPrefix(upper, p) {
+			s = s[len(p):]
+			if p == posPrefix {
+				matchedPOS = true
+			}
+			break
+		}
+	}
+
+	if matchedPOS {
+		i := 0
+		for i < len(s) && s[i] >= '0' && s[i] <= '9' {
+			i++
+		}
+		s = strings.TrimSpace(s[i:])
+	}
+
+	tokens := strings.Fields(s)
+	var words []string
+	for _, tok := range tokens {
+		if len(words) >= 3 {
+			break
+		}
+		if strings.HasSuffix(tok, ":") {
+			break
+		}
+		if len(tok) == 2 && isAlpha(tok) {
+			break
+		}
+		if len(tok) > 0 && (tok[0] >= '0' && tok[0] <= '9' || tok[0] == '#') {
+			break
+		}
+		words = append(words, tok)
+	}
+
+	if len(words) == 0 {
+		return strings.ToUpper(strings.TrimSpace(s))
+	}
+	return strings.ToUpper(strings.Join(words, " "))
 }
 
 // ExtractKeyword strips common bank prefixes from a transaction description

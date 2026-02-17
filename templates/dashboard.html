@@ -22,9 +22,21 @@
         <div class="section-header">
             <h2>Upcoming Bills</h2>
         </div>
-        {{if .UpcomingBills}}
+        {{if or .BillsBefore .BillsAfter}}
         <ul class="upcoming-list">
-            {{range .UpcomingBills}}
+            {{range .BillsBefore}}
+            <li class="upcoming-item">
+                <div>
+                    <span class="name">{{.Name}}</span>
+                    <span class="date">{{.Date}}</span>
+                </div>
+                <span class="amount bill">{{formatMoney .Amount}}</span>
+            </li>
+            {{end}}
+            {{if and .BillsBefore .BillsAfter}}
+            <li class="upcoming-separator">next check: {{.NextPaycheckDate}}</li>
+            {{end}}
+            {{range .BillsAfter}}
             <li class="upcoming-item">
                 <div>
                     <span class="name">{{.Name}}</span>
