@@ -17,6 +17,18 @@
             </div>
         </div>
     </form>
+    <div style="border-top:1px solid var(--border); margin-top:1rem; padding-top:1rem; display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+        <label style="font-size:0.9rem; color:var(--text-muted); white-space:nowrap;">Account Balance</label>
+        <form method="POST" action="/balance" style="display:flex; gap:0.4rem; align-items:center;">
+            <div class="amount-input">
+                <input type="text" name="balance" placeholder="0.00"
+                    value="{{if .Balance}}{{centsToDollar .Balance}}{{end}}"
+                    style="padding-left:1.5rem; width:120px; font-size:0.9rem;">
+            </div>
+            <button type="submit" class="btn btn-small btn-secondary">Set</button>
+        </form>
+        {{if .Balance}}<span style="font-size:0.85rem; color:var(--text-muted);">currently {{formatMoney .Balance}}</span>{{end}}
+    </div>
 </div>
 
 <!-- Pending Review -->

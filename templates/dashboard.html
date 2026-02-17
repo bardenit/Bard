@@ -9,10 +9,10 @@
     <div class="summary-card">
         <div class="label">Upcoming Bills</div>
         <div class="value negative">{{formatMoney .UpcomingBillsTotal}}</div>
-        <div class="label" style="margin-top:0.4rem;">before {{.NextPaycheckDate}}</div>
+        <div class="label" style="margin-top:0.4rem;">before next check on {{.NextPaycheckDate}}</div>
     </div>
     <div class="summary-card">
-        <div class="label">Balance</div>
+        <div class="label">Balance until next check</div>
         {{if .HasBalance}}
         <div class="value {{if ge .Balance 0}}positive{{else}}negative{{end}}">{{formatMoney .Balance}}</div>
         {{else}}

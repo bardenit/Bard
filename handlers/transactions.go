@@ -64,8 +64,12 @@ func TransactionsHandler(w http.ResponseWriter, r *http.Request) {
 	confirmed, err := models.ListConfirmedTransactions(50)
 	if err != nil {
 		log.Printf("Error listing confirmed transactions: %v", err)
-		// Non-fatal — continue with empty list.
 		confirmed = nil
+	}
+
+	balance, _, err := models.GetManualBalance()
+	if err != nil {
+		log.Printf("Error getting balance: %v", err)
 	}
 
 	data := PageData{
@@ -78,6 +82,7 @@ func TransactionsHandler(w http.ResponseWriter, r *http.Request) {
 		"Rules":      rules,
 		"Categories": categories,
 		"Confirmed":  confirmed,
+		"Balance":    balance,
 	}
 	RenderTemplate(w, "transactions.html", data)
 }

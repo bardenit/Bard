@@ -507,6 +507,10 @@ h1 {
     position: relative;
 }
 
+.nav-dropdown-right {
+    margin-left: auto;
+}
+
 .nav-dropdown-toggle {
     padding: 0.4rem 0.6rem;
     border-radius: var(--radius);
