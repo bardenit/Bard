@@ -49,6 +49,28 @@ var migrations = []string{
 		created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
 		updated_at  TEXT    NOT NULL DEFAULT (datetime('now'))
 	)`,
+	`CREATE TABLE IF NOT EXISTS transaction_rules (
+		id          INTEGER PRIMARY KEY AUTOINCREMENT,
+		keyword     TEXT    NOT NULL UNIQUE,
+		category_id INTEGER NOT NULL REFERENCES budget_categories(id) ON DELETE CASCADE,
+		created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
+	)`,
+	`CREATE TABLE IF NOT EXISTS imported_transactions (
+		id                INTEGER PRIMARY KEY AUTOINCREMENT,
+		account_name      TEXT    NOT NULL DEFAULT '',
+		processed_date    TEXT    NOT NULL,
+		description       TEXT    NOT NULL,
+		credit_or_debit   TEXT    NOT NULL,
+		amount            INTEGER NOT NULL,
+		category_id       INTEGER REFERENCES budget_categories(id) ON DELETE SET NULL,
+		auto_category_id  INTEGER REFERENCES budget_categories(id) ON DELETE SET NULL,
+		is_duplicate_flag INTEGER NOT NULL DEFAULT 0,
+		is_confirmed      INTEGER NOT NULL DEFAULT 0,
+		is_dismissed      INTEGER NOT NULL DEFAULT 0,
+		source_file       TEXT    NOT NULL DEFAULT '',
+		imported_at       TEXT    NOT NULL DEFAULT (datetime('now'))
+	)`,
+	`CREATE INDEX IF NOT EXISTS idx_expenditures_amount ON expenditures(amount)`,
 }
 
 func RunMigrations() {

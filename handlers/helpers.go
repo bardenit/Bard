@@ -40,6 +40,7 @@ func InitTemplates(dir string) {
 		"budgets.html",
 		"expenditures.html",
 		"calendar.html",
+		"transactions.html",
 	}
 
 	pageCache = make(map[string]*template.Template, len(pages))

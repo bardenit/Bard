@@ -1,0 +1,190 @@
+{{define "content"}}
+<div class="page-header">
+    <h1>Transactions</h1>
+</div>
+
+<!-- Import Card -->
+<div class="card">
+    <h2>Import CSV</h2>
+    <form method="POST" action="/transactions/import" enctype="multipart/form-data">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="csv_file">Bank CSV File</label>
+                <input type="file" id="csv_file" name="csv_file" accept=".csv" required>
+            </div>
+            <div class="form-group form-group-submit">
+                <button type="submit" class="btn">Import</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Pending Review -->
+<div class="card">
+    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; margin-bottom:1rem;">
+        <h2 style="margin:0;">Pending Review ({{len .Pending}})</h2>
+        {{if .Pending}}
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+            <form method="POST" action="/transactions/confirm-all-auto" style="margin:0;">
+                <button type="submit" class="btn btn-small">Confirm All Auto-Categorized</button>
+            </form>
+            <form method="POST" action="/transactions/dismiss-all-credits" style="margin:0;">
+                <button type="submit" class="btn btn-small btn-secondary">Dismiss All Credits</button>
+            </form>
+        </div>
+        {{end}}
+    </div>
+
+    {{if .Pending}}
+    <div class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Amount</th>
+                <th>Type</th>
+                <th>Category</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {{range .Pending}}
+        <tr {{if .IsDuplicateFlag}}style="background:var(--warning-bg, #fff8e1);"{{end}}>
+            <td style="white-space:nowrap;">{{.ProcessedDate}}</td>
+            <td>
+                {{.Description}}
+                {{if .IsDuplicateFlag}}
+                <span class="badge badge-warning" title="Similar amount exists in expenditures">duplicate?</span>
+                {{end}}
+            </td>
+            <td style="white-space:nowrap;">{{formatMoney .Amount}}</td>
+            <td>
+                {{if eq .CreditOrDebit "Credit"}}
+                <span class="badge badge-credit">Credit</span>
+                {{else}}
+                <span class="badge badge-debit">Debit</span>
+                {{end}}
+            </td>
+            <td>
+                {{if eq .CreditOrDebit "Debit"}}
+                {{$txn := .}}
+                <select name="category_id" form="confirm-{{.ID}}" style="min-width:150px;">
+                    <option value="">-- select --</option>
+                    {{range $.Categories}}
+                    <option value="{{.ID}}" {{if eq .ID ($txn.AutoCatIDOrZero)}}selected{{end}}>{{.Name}}</option>
+                    {{end}}
+                </select>
+                {{else}}
+                <span style="color:var(--text-muted);">—</span>
+                {{end}}
+            </td>
+            <td style="white-space:nowrap;">
+                {{if eq .CreditOrDebit "Debit"}}
+                <form id="confirm-{{.ID}}" method="POST" action="/transactions/{{.ID}}/confirm" style="display:inline;">
+                    <button type="submit" class="btn btn-small">Confirm</button>
+                </form>
+                {{end}}
+                <form method="POST" action="/transactions/{{.ID}}/dismiss" style="display:inline;">
+                    <button type="submit" class="btn btn-small btn-secondary">Dismiss</button>
+                </form>
+            </td>
+        </tr>
+        {{end}}
+        </tbody>
+    </table>
+    </div>
+    {{else}}
+    <p style="color:var(--text-muted);">No pending transactions. Import a CSV to get started.</p>
+    {{end}}
+</div>
+
+<!-- Confirmed Transactions -->
+{{if .Confirmed}}
+<details class="card">
+    <summary style="cursor:pointer; font-weight:600; font-size:1.05rem;">
+        Recently Confirmed ({{len .Confirmed}})
+    </summary>
+    <div style="margin-top:1rem;">
+    <div class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Amount</th>
+                <th>Type</th>
+                <th>Category</th>
+            </tr>
+        </thead>
+        <tbody>
+        {{range .Confirmed}}
+        <tr>
+            <td style="white-space:nowrap;">{{.ProcessedDate}}</td>
+            <td>{{.Description}}</td>
+            <td style="white-space:nowrap;">{{formatMoney .Amount}}</td>
+            <td>
+                {{if eq .CreditOrDebit "Credit"}}
+                <span class="badge badge-credit">Credit</span>
+                {{else}}
+                <span class="badge badge-debit">Debit</span>
+                {{end}}
+            </td>
+            <td>{{.CategoryName}}</td>
+        </tr>
+        {{end}}
+        </tbody>
+    </table>
+    </div>
+    </div>
+</details>
+{{end}}
+
+<!-- Rules -->
+<details class="card">
+    <summary style="cursor:pointer; font-weight:600; font-size:1.05rem;">
+        Categorization Rules ({{len .Rules}})
+    </summary>
+    <div style="margin-top:1rem;">
+    {{if .Rules}}
+    <div class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>Keyword</th>
+                <th>Category</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {{range .Rules}}
+        <tr>
+            <td><code>{{.Keyword}}</code></td>
+            <td>
+                <form method="POST" action="/transactions/rules/{{.ID}}/update" style="display:flex; gap:0.4rem; align-items:center;">
+                    <select name="category_id" style="min-width:150px;">
+                        {{$rule := .}}
+                        {{range $.Categories}}
+                        <option value="{{.ID}}" {{if eq .ID $rule.CategoryID}}selected{{end}}>{{.Name}}</option>
+                        {{end}}
+                    </select>
+                    <button type="submit" class="btn btn-small btn-secondary">Save</button>
+                </form>
+            </td>
+            <td>
+                <form method="POST" action="/transactions/rules/delete" style="display:inline;">
+                    <input type="hidden" name="rule_id" value="{{.ID}}">
+                    <button type="submit" class="btn btn-small btn-danger">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {{end}}
+        </tbody>
+    </table>
+    </div>
+    {{else}}
+    <p style="color:var(--text-muted);">No rules yet. Rules are learned automatically when you confirm transactions with a changed category.</p>
+    {{end}}
+    </div>
+</details>
+{{end}}

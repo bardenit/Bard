@@ -35,5 +35,6 @@ func Init() {
 	}
 
 	RunMigrations()
+	SeedInitialData()
 	log.Println("Database initialized at", dbPath)
 }

@@ -51,6 +51,10 @@ func main() {
 	// Calendar
 	mux.HandleFunc("GET /calendar", handlers.CalendarHandler)
 
+	// Transactions
+	mux.HandleFunc("/transactions", handlers.TransactionsRouter)
+	mux.HandleFunc("/transactions/{path...}", handlers.TransactionsRouter)
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
