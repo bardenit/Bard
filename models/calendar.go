@@ -147,8 +147,20 @@ func MonthlyBillsTotal(year int, month time.Month) (int, error) {
 	return total, nil
 }
 
-// UpcomingBillOccurrences returns the next N bill occurrences from today
-func UpcomingBillOccurrences(limit int) ([]Occurrence, error) {
+// adjustWeekend moves a date falling on Saturday or Sunday to the preceding Friday.
+func adjustWeekend(d time.Time) time.Time {
+	switch d.Weekday() {
+	case time.Saturday:
+		return d.AddDate(0, 0, -1)
+	case time.Sunday:
+		return d.AddDate(0, 0, -2)
+	}
+	return d
+}
+
+// UpcomingBillOccurrences returns the next occurrence of each active bill, sorted by date.
+// Bills due on a weekend are moved to the preceding Friday.
+func UpcomingBillOccurrences() ([]Occurrence, error) {
 	bills, err := ListActiveBills()
 	if err != nil {
 		return nil, err
@@ -164,27 +176,24 @@ func UpcomingBillOccurrences(limit int) ([]Occurrence, error) {
 		if err != nil {
 			continue
 		}
-		for _, d := range ExpandOccurrences(anchor, bill.Recurrence, start, end) {
-			all = append(all, Occurrence{
-				Name:   bill.Name,
-				Amount: bill.Amount,
-				Date:   d,
-				Type:   "bill",
-			})
+		dates := ExpandOccurrences(anchor, bill.Recurrence, start, end)
+		if len(dates) == 0 {
+			continue
 		}
+		all = append(all, Occurrence{
+			Name:   bill.Name,
+			Amount: bill.Amount,
+			Date:   adjustWeekend(dates[0]),
+			Type:   "bill",
+		})
 	}
 
-	// Sort by date
 	sortOccurrences(all)
-
-	if len(all) > limit {
-		all = all[:limit]
-	}
 	return all, nil
 }
 
-// UpcomingIncomeOccurrences returns the next N income occurrences from today
-func UpcomingIncomeOccurrences(limit int) ([]Occurrence, error) {
+// UpcomingIncomeOccurrences returns the next occurrence of each active income item, sorted by date.
+func UpcomingIncomeOccurrences() ([]Occurrence, error) {
 	items, err := ListActiveIncome()
 	if err != nil {
 		return nil, err
@@ -200,21 +209,19 @@ func UpcomingIncomeOccurrences(limit int) ([]Occurrence, error) {
 		if err != nil {
 			continue
 		}
-		for _, d := range ExpandOccurrences(anchor, item.Recurrence, start, end) {
-			all = append(all, Occurrence{
-				Name:   item.Name,
-				Amount: item.Amount,
-				Date:   d,
-				Type:   "income",
-			})
+		dates := ExpandOccurrences(anchor, item.Recurrence, start, end)
+		if len(dates) == 0 {
+			continue
 		}
+		all = append(all, Occurrence{
+			Name:   item.Name,
+			Amount: item.Amount,
+			Date:   dates[0],
+			Type:   "income",
+		})
 	}
 
 	sortOccurrences(all)
-
-	if len(all) > limit {
-		all = all[:limit]
-	}
 	return all, nil
 }
 
@@ -226,7 +233,7 @@ func BillsDueBeforeNextPaycheck() (total int, paycheckDate time.Time, err error)
 	start := time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, time.Local)
 
 	// Find the next paycheck.
-	incomeOcc, err := UpcomingIncomeOccurrences(1)
+	incomeOcc, err := UpcomingIncomeOccurrences()
 	if err != nil {
 		return 0, time.Time{}, err
 	}
@@ -292,11 +299,12 @@ func BuildCalendarMonth(year int, month time.Month) ([]CalendarDay, error) {
 			continue
 		}
 		for _, d := range ExpandOccurrences(anchor, bill.Recurrence, gridStart, gridEnd) {
-			key := d.Format("2006-01-02")
+			adj := adjustWeekend(d)
+			key := adj.Format("2006-01-02")
 			dayMap[key] = append(dayMap[key], Occurrence{
 				Name:   bill.Name,
 				Amount: bill.Amount,
-				Date:   d,
+				Date:   adj,
 				Type:   "bill",
 			})
 		}

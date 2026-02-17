@@ -14,14 +14,6 @@
         {{else}}
         <div class="value" style="color:var(--text-muted); font-size:0.95rem;">Not set</div>
         {{end}}
-        <form method="POST" action="/balance" style="display:flex; gap:0.4rem; margin-top:0.6rem; align-items:center;">
-            <div class="amount-input" style="flex:1;">
-                <input type="text" name="balance" placeholder="0.00"
-                    value="{{if .HasBalance}}{{centsToDollar .Balance}}{{end}}"
-                    style="padding-left:1.5rem; width:100%; font-size:0.85rem;">
-            </div>
-            <button type="submit" class="btn btn-small btn-secondary">Set</button>
-        </form>
     </div>
 </div>
 

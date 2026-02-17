@@ -27,7 +27,7 @@ func SetBalanceHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("SetManualBalance error: %v", err)
 		SetFlash(w, "Failed to save balance.")
 	}
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, "/transactions", http.StatusSeeOther)
 }
 
 type MonthOption struct {
@@ -41,25 +41,49 @@ func DashboardHandler(w http.ResponseWriter, r *http.Request) {
 	now := time.Now()
 
 	// Parse optional year/month query params for budget status view.
-	selectedYear := now.Year()
-	selectedMonth := int(now.Month())
+	requestedYear := now.Year()
+	requestedMonth := int(now.Month())
 	if y := r.URL.Query().Get("year"); y != "" {
 		if v, err := strconv.Atoi(y); err == nil {
-			selectedYear = v
+			requestedYear = v
 		}
 	}
 	if m := r.URL.Query().Get("month"); m != "" {
 		if v, err := strconv.Atoi(m); err == nil && v >= 1 && v <= 12 {
-			selectedMonth = v
+			requestedMonth = v
 		}
 	}
 
-	// Summary cards always use current month.
-	curYear, curMonth := now.Year(), now.Month()
-
-	monthlyIncome, err := models.MonthlyIncomeTotal(curYear, curMonth)
+	// Build month options from months that actually have spending data.
+	monthsWithData, err := models.MonthsWithSpending()
 	if err != nil {
-		log.Printf("Error calculating monthly income: %v", err)
+		log.Printf("Error getting months with spending: %v", err)
+	}
+
+	// Validate selected month; fall back to most recent month with data.
+	selectedYear, selectedMonth := requestedYear, requestedMonth
+	if len(monthsWithData) > 0 {
+		found := false
+		for _, t := range monthsWithData {
+			if t.Year() == selectedYear && int(t.Month()) == selectedMonth {
+				found = true
+				break
+			}
+		}
+		if !found {
+			selectedYear = monthsWithData[0].Year()
+			selectedMonth = int(monthsWithData[0].Month())
+		}
+	}
+
+	var monthOptions []MonthOption
+	for _, t := range monthsWithData {
+		monthOptions = append(monthOptions, MonthOption{
+			Year:     t.Year(),
+			Month:    int(t.Month()),
+			Label:    t.Format("January 2006"),
+			Selected: t.Year() == selectedYear && int(t.Month()) == selectedMonth,
+		})
 	}
 
 	upcomingBillsTotal, nextPaycheck, err := models.BillsDueBeforeNextPaycheck()
@@ -79,12 +103,12 @@ func DashboardHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	unallocated := balance - totalBudgeted
 
-	upcomingBills, err := models.UpcomingBillOccurrences(10)
+	upcomingBills, err := models.UpcomingBillOccurrences()
 	if err != nil {
 		log.Printf("Error getting upcoming bills: %v", err)
 	}
 
-	upcomingDeposits, err := models.UpcomingIncomeOccurrences(5)
+	upcomingDeposits, err := models.UpcomingIncomeOccurrences()
 	if err != nil {
 		log.Printf("Error getting upcoming deposits: %v", err)
 	}
@@ -103,18 +127,6 @@ func DashboardHandler(w http.ResponseWriter, r *http.Request) {
 	var budgetStatuses []BudgetStatus
 	for _, cat := range categoryTree {
 		addBudgetStatuses(&budgetStatuses, cat, spending, 0)
-	}
-
-	// Build month options — current month plus previous 12.
-	var monthOptions []MonthOption
-	for i := 0; i < 13; i++ {
-		t := time.Date(now.Year(), now.Month()-time.Month(i), 1, 0, 0, 0, 0, time.Local)
-		monthOptions = append(monthOptions, MonthOption{
-			Year:     t.Year(),
-			Month:    int(t.Month()),
-			Label:    t.Format("January 2006"),
-			Selected: t.Year() == selectedYear && int(t.Month()) == selectedMonth,
-		})
 	}
 
 	var billItems []UpcomingItem
@@ -143,20 +155,19 @@ func DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		Flash:     GetFlash(w, r),
 	}
 	data.Extra = map[string]interface{}{
-		"MonthlyIncome":       monthlyIncome,
 		"UpcomingBillsTotal":  upcomingBillsTotal,
 		"NextPaycheckDate":    nextPaycheck.Format("Jan 2"),
-		"Balance":         balance,
-		"HasBalance":      hasBalance,
-		"TotalBudgeted":   totalBudgeted,
-		"Unallocated":     unallocated,
-		"UpcomingBills":   billItems,
-		"UpcomingDeposits": depositItems,
-		"BudgetStatuses":  budgetStatuses,
-		"MonthOptions":    monthOptions,
-		"SelectedLabel":   selectedLabel,
-		"SelectedYear":    fmt.Sprintf("%d", selectedYear),
-		"SelectedMonth":   fmt.Sprintf("%d", selectedMonth),
+		"Balance":             balance,
+		"HasBalance":          hasBalance,
+		"TotalBudgeted":       totalBudgeted,
+		"Unallocated":         unallocated,
+		"UpcomingBills":       billItems,
+		"UpcomingDeposits":    depositItems,
+		"BudgetStatuses":      budgetStatuses,
+		"MonthOptions":        monthOptions,
+		"SelectedLabel":       selectedLabel,
+		"SelectedYear":        fmt.Sprintf("%d", selectedYear),
+		"SelectedMonth":       fmt.Sprintf("%d", selectedMonth),
 	}
 
 	RenderTemplate(w, "dashboard.html", data)

@@ -84,6 +84,33 @@ func DeleteExpenditure(id int) error {
 	return err
 }
 
+// MonthsWithSpending returns distinct months that have at least one expenditure, newest first.
+func MonthsWithSpending() ([]time.Time, error) {
+	rows, err := db.DB.Query(`
+		SELECT DISTINCT strftime('%Y', date) as y, strftime('%m', date) as m
+		FROM expenditures
+		ORDER BY y DESC, m DESC
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var months []time.Time
+	for rows.Next() {
+		var y, m string
+		if err := rows.Scan(&y, &m); err != nil {
+			return nil, err
+		}
+		t, err := time.Parse("2006-01", y+"-"+m)
+		if err != nil {
+			continue
+		}
+		months = append(months, t)
+	}
+	return months, rows.Err()
+}
+
 // GetAllCategorySpending returns a map of category_id -> total cents spent for a given month
 func GetAllCategorySpending(year int, month time.Month) (map[int]int, error) {
 	startDate := fmt.Sprintf("%04d-%02d-01", year, month)
