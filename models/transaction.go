@@ -185,24 +185,6 @@ func GetTransaction(id int) (ImportedTransaction, error) {
 	return t, err
 }
 
-// GetLatestBalance returns the account balance from the most recent imported transaction
-// that has a balance value. Returns 0, false if none is available.
-func GetLatestBalance() (int, bool, error) {
-	var balance int
-	err := db.DB.QueryRow(`
-		SELECT balance FROM imported_transactions
-		WHERE balance IS NOT NULL
-		ORDER BY processed_date DESC, id DESC
-		LIMIT 1
-	`).Scan(&balance)
-	if err == sql.ErrNoRows {
-		return 0, false, nil
-	}
-	if err != nil {
-		return 0, false, err
-	}
-	return balance, true, nil
-}
 
 // CreateImportedTransaction inserts a new imported transaction row.
 func CreateImportedTransaction(accountName, processedDate, description, creditOrDebit string, amount int, balance *int, autoCatID *int, isDuplicate bool, sourceFile string) (int64, error) {

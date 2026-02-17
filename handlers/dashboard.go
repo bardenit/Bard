@@ -10,6 +10,26 @@ import (
 	"github.com/bardenit/Bard/models"
 )
 
+// SetBalanceHandler handles POST /balance to manually set the account balance.
+func SetBalanceHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+	amountStr := r.FormValue("balance")
+	cents, err := parseCents(amountStr)
+	if err != nil {
+		SetFlash(w, "Invalid balance amount.")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+	if err := models.SetManualBalance(cents); err != nil {
+		log.Printf("SetManualBalance error: %v", err)
+		SetFlash(w, "Failed to save balance.")
+	}
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
 type MonthOption struct {
 	Year     int
 	Month    int
@@ -52,10 +72,10 @@ func DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Error calculating total budgeted: %v", err)
 	}
 
-	// Balance from latest imported transaction with a balance value.
-	balance, hasBalance, err := models.GetLatestBalance()
+	// Balance from manually entered account balance.
+	balance, hasBalance, err := models.GetManualBalance()
 	if err != nil {
-		log.Printf("Error getting latest balance: %v", err)
+		log.Printf("Error getting manual balance: %v", err)
 	}
 	unallocated := balance - totalBudgeted
 

@@ -75,6 +75,10 @@ var migrations = []string{
 	)`,
 	`CREATE INDEX IF NOT EXISTS idx_expenditures_amount ON expenditures(amount)`,
 	`ALTER TABLE imported_transactions ADD COLUMN balance INTEGER`,
+	`CREATE TABLE IF NOT EXISTS settings (
+		key   TEXT PRIMARY KEY,
+		value TEXT NOT NULL
+	)`,
 }
 
 func RunMigrations() {

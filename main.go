@@ -37,6 +37,7 @@ func main() {
 
 	// Dashboard
 	mux.HandleFunc("GET /{$}", handlers.DashboardHandler)
+	mux.HandleFunc("POST /balance", handlers.SetBalanceHandler)
 
 	// Bills
 	mux.HandleFunc("/bills", handlers.BillsRouter)

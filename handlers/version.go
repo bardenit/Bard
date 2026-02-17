@@ -9,7 +9,7 @@ import (
 )
 
 // AppVersion is the current application version, displayed in the nav.
-const AppVersion = "1.2"
+const AppVersion = "1.3"
 
 // upgradeAvailable is set to 1 by the background checker when a newer commit exists on GitHub.
 var upgradeAvailable atomic.Bool
