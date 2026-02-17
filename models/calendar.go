@@ -37,6 +37,9 @@ func ExpandOccurrences(anchorDate time.Time, recurrence string, start, end time.
 
 	case "monthly":
 		dates = expandMonthly(anchorDate, start, end)
+
+	case "yearly":
+		dates = expandYearly(anchorDate, start, end)
 	}
 
 	return dates
@@ -145,6 +148,26 @@ func MonthlyBillsTotal(year int, month time.Month) (int, error) {
 		total += bill.Amount * len(occurrences)
 	}
 	return total, nil
+}
+
+func expandYearly(anchor time.Time, start, end time.Time) []time.Time {
+	var dates []time.Time
+
+	current := anchor
+	// Advance to the first occurrence on or after start.
+	if current.Before(start) {
+		years := start.Year() - current.Year()
+		current = current.AddDate(years, 0, 0)
+		if current.Before(start) {
+			current = current.AddDate(1, 0, 0)
+		}
+	}
+
+	for !current.After(end) {
+		dates = append(dates, current)
+		current = current.AddDate(1, 0, 0)
+	}
+	return dates
 }
 
 // adjustWeekend moves a date falling on Saturday or Sunday to the preceding Friday.
