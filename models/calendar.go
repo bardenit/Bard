@@ -218,6 +218,44 @@ func UpcomingIncomeOccurrences(limit int) ([]Occurrence, error) {
 	return all, nil
 }
 
+// BillsDueBeforeNextPaycheck returns the total of all bills due between today and
+// the next upcoming income date. Also returns that paycheck date for display.
+// Falls back to end of current month if no upcoming income is found.
+func BillsDueBeforeNextPaycheck() (total int, paycheckDate time.Time, err error) {
+	today := time.Now()
+	start := time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, time.Local)
+
+	// Find the next paycheck.
+	incomeOcc, err := UpcomingIncomeOccurrences(1)
+	if err != nil {
+		return 0, time.Time{}, err
+	}
+
+	var cutoff time.Time
+	if len(incomeOcc) > 0 {
+		cutoff = incomeOcc[0].Date
+	} else {
+		// No paycheck found — fallback to end of current month.
+		cutoff = time.Date(today.Year(), today.Month()+1, 0, 0, 0, 0, 0, time.Local)
+	}
+
+	bills, err := ListActiveBills()
+	if err != nil {
+		return 0, cutoff, err
+	}
+
+	for _, bill := range bills {
+		anchor, err := time.Parse("2006-01-02", bill.DueDate)
+		if err != nil {
+			continue
+		}
+		occurrences := ExpandOccurrences(anchor, bill.Recurrence, start, cutoff)
+		total += bill.Amount * len(occurrences)
+	}
+
+	return total, cutoff, nil
+}
+
 // BuildCalendarMonth generates calendar data for a given month
 func BuildCalendarMonth(year int, month time.Month) ([]CalendarDay, error) {
 	firstOfMonth := time.Date(year, month, 1, 0, 0, 0, 0, time.Local)

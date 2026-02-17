@@ -7,8 +7,9 @@
         <div class="value positive">{{formatMoney .MonthlyIncome}}</div>
     </div>
     <div class="summary-card">
-        <div class="label">Monthly Bills</div>
-        <div class="value negative">{{formatMoney .MonthlyBills}}</div>
+        <div class="label">Upcoming Bills</div>
+        <div class="value negative">{{formatMoney .UpcomingBillsTotal}}</div>
+        <div class="label" style="margin-top:0.4rem;">before {{.NextPaycheckDate}}</div>
     </div>
     <div class="summary-card">
         <div class="label">Balance</div>

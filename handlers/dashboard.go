@@ -62,9 +62,9 @@ func DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Error calculating monthly income: %v", err)
 	}
 
-	monthlyBills, err := models.MonthlyBillsTotal(curYear, curMonth)
+	upcomingBillsTotal, nextPaycheck, err := models.BillsDueBeforeNextPaycheck()
 	if err != nil {
-		log.Printf("Error calculating monthly bills: %v", err)
+		log.Printf("Error calculating upcoming bills: %v", err)
 	}
 
 	totalBudgeted, err := models.TotalMonthlyBudgeted()
@@ -143,8 +143,9 @@ func DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		Flash:     GetFlash(w, r),
 	}
 	data.Extra = map[string]interface{}{
-		"MonthlyIncome":   monthlyIncome,
-		"MonthlyBills":    monthlyBills,
+		"MonthlyIncome":       monthlyIncome,
+		"UpcomingBillsTotal":  upcomingBillsTotal,
+		"NextPaycheckDate":    nextPaycheck.Format("Jan 2"),
 		"Balance":         balance,
 		"HasBalance":      hasBalance,
 		"TotalBudgeted":   totalBudgeted,
