@@ -1,6 +1,37 @@
-// Register service worker for PWA installability (desktop + mobile).
+// Register service worker from root path so its scope covers the whole app.
 if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("/static/sw.js");
+    navigator.serviceWorker.register("/sw.js");
+}
+
+// PWA install prompt — captured and shown as a banner when available.
+var _installPrompt = null;
+window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault();
+    _installPrompt = e;
+    try { if (sessionStorage.getItem("pwa-dismissed")) { return; } } catch(e2) {}
+    var banner = document.getElementById("pwa-install-banner");
+    if (banner) {
+        banner.style.display = "flex";
+    }
+});
+
+// Hide banner once installed.
+window.addEventListener("appinstalled", function () {
+    var banner = document.getElementById("pwa-install-banner");
+    if (banner) { banner.style.display = "none"; }
+    _installPrompt = null;
+});
+
+function pwaInstall() {
+    if (!_installPrompt) { return; }
+    _installPrompt.prompt();
+    _installPrompt.userChoice.then(function () { _installPrompt = null; });
+}
+
+function pwaDismiss() {
+    var banner = document.getElementById("pwa-install-banner");
+    if (banner) { banner.style.display = "none"; }
+    try { sessionStorage.setItem("pwa-dismissed", "1"); } catch(e) {}
 }
 
 document.addEventListener("DOMContentLoaded", function () {

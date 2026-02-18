@@ -14,6 +14,13 @@
     <link rel="apple-touch-icon" href="/static/icon-180.png">
 </head>
 <body>
+    <div id="pwa-install-banner" style="display:none; align-items:center; justify-content:space-between; gap:1rem; padding:0.6rem 1.5rem; background:#1e1b4b; color:#fff; font-size:0.9rem; flex-wrap:wrap;">
+        <span>&#128640; Install <strong>Budget</strong> as an app for quick access from your desktop.</span>
+        <div style="display:flex; gap:0.5rem; align-items:center;">
+            <button onclick="pwaInstall()" style="background:#0d6efd; color:#fff; border:none; padding:0.35rem 0.9rem; border-radius:4px; cursor:pointer; font-size:0.85rem;">Install</button>
+            <button onclick="pwaDismiss()" style="background:transparent; color:#aaa; border:none; font-size:1.1rem; cursor:pointer; line-height:1;" title="Dismiss">&times;</button>
+        </div>
+    </div>
     <nav class="nav">
         <div class="nav-inner">
             <div class="nav-brand">

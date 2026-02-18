@@ -35,6 +35,14 @@ func main() {
 	// Static files
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(staticDir))))
 
+	// Service worker served from root so its scope covers the whole app.
+	swPath := staticDir + "/sw.js"
+	mux.HandleFunc("GET /sw.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/javascript")
+		w.Header().Set("Service-Worker-Allowed", "/")
+		http.ServeFile(w, r, swPath)
+	})
+
 	// Dashboard
 	mux.HandleFunc("GET /{$}", handlers.DashboardHandler)
 	mux.HandleFunc("POST /balance", handlers.SetBalanceHandler)
