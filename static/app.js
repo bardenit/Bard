@@ -1,3 +1,8 @@
+// Register service worker for PWA installability (desktop + mobile).
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/static/sw.js");
+}
+
 document.addEventListener("DOMContentLoaded", function () {
     // Delete confirmation
     document.querySelectorAll("form[data-confirm]").forEach(function (form) {
