@@ -82,6 +82,7 @@
             <th>Deposit Date</th>
             <th>Recurrence</th>
             <th>Status</th>
+            <th style="text-align:center;" title="Primary paycheck source used for bill cutoff on dashboard">Primary</th>
             <th>Actions</th>
         </tr>
     </thead>
@@ -97,6 +98,15 @@
                 <span class="badge badge-active">Active</span>
                 {{else}}
                 <span class="badge badge-inactive">Inactive</span>
+                {{end}}
+            </td>
+            <td style="text-align:center;">
+                {{if .IsPrimary}}
+                <span title="Primary paycheck" style="font-size:1.2em; color:#f59e0b;">&#9733;</span>
+                {{else}}
+                <form method="POST" action="/income/{{.ID}}/set-primary" style="display:inline;">
+                    <button type="submit" class="btn btn-link btn-sm" title="Set as primary paycheck" style="font-size:1.1em; color:var(--text-muted);">&#9734;</button>
+                </form>
                 {{end}}
             </td>
             <td>

@@ -152,6 +152,16 @@ func DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
+	// Sum top-level (Depth==0) rows for the totals footer row.
+	var budgetTotalAllocated, budgetTotalSpent int
+	for _, bs := range budgetStatuses {
+		if bs.Depth == 0 {
+			budgetTotalAllocated += bs.Allocated
+			budgetTotalSpent += bs.Spent
+		}
+	}
+	budgetTotalRemaining := budgetTotalAllocated - budgetTotalSpent
+
 	selectedLabel := time.Date(selectedYear, time.Month(selectedMonth), 1, 0, 0, 0, 0, time.Local).Format("January 2006")
 
 	data := PageData{
@@ -160,20 +170,23 @@ func DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		Flash:     GetFlash(w, r),
 	}
 	data.Extra = map[string]interface{}{
-		"UpcomingBillsTotal":  upcomingBillsTotal,
-		"NextPaycheckDate":    nextPaycheck.Format("Jan 2"),
-		"Balance":             balance,
-		"HasBalance":          hasBalance,
-		"TotalBudgeted":       totalBudgeted,
-		"Unallocated":         unallocated,
-		"BillsBefore":         billsBefore,
-		"BillsAfter":          billsAfter,
-		"UpcomingDeposits":    depositItems,
-		"BudgetStatuses":      budgetStatuses,
-		"MonthOptions":        monthOptions,
-		"SelectedLabel":       selectedLabel,
-		"SelectedYear":        fmt.Sprintf("%d", selectedYear),
-		"SelectedMonth":       fmt.Sprintf("%d", selectedMonth),
+		"UpcomingBillsTotal":    upcomingBillsTotal,
+		"NextPaycheckDate":      nextPaycheck.Format("Jan 2"),
+		"Balance":               balance,
+		"HasBalance":            hasBalance,
+		"TotalBudgeted":         totalBudgeted,
+		"Unallocated":           unallocated,
+		"BillsBefore":           billsBefore,
+		"BillsAfter":            billsAfter,
+		"UpcomingDeposits":      depositItems,
+		"BudgetStatuses":        budgetStatuses,
+		"BudgetTotalAllocated":  budgetTotalAllocated,
+		"BudgetTotalSpent":      budgetTotalSpent,
+		"BudgetTotalRemaining":  budgetTotalRemaining,
+		"MonthOptions":          monthOptions,
+		"SelectedLabel":         selectedLabel,
+		"SelectedYear":          fmt.Sprintf("%d", selectedYear),
+		"SelectedMonth":         fmt.Sprintf("%d", selectedMonth),
 	}
 
 	RenderTemplate(w, "dashboard.html", data)

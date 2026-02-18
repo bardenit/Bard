@@ -63,7 +63,13 @@ func TransactionsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	confirmed, err := models.ListConfirmedTransactions(50)
+	searchQuery := strings.TrimSpace(r.URL.Query().Get("q"))
+	var confirmed []models.ImportedTransaction
+	if searchQuery != "" {
+		confirmed, err = models.SearchConfirmedTransactions(searchQuery)
+	} else {
+		confirmed, err = models.ListConfirmedTransactions(50)
+	}
 	if err != nil {
 		log.Printf("Error listing confirmed transactions: %v", err)
 		confirmed = nil
@@ -80,11 +86,12 @@ func TransactionsHandler(w http.ResponseWriter, r *http.Request) {
 		Flash:     GetFlash(w, r),
 	}
 	data.Extra = map[string]interface{}{
-		"Pending":    pending,
-		"Rules":      rules,
-		"Categories": categories,
-		"Confirmed":  confirmed,
-		"Balance":    balance,
+		"Pending":     pending,
+		"Rules":       rules,
+		"Categories":  categories,
+		"Confirmed":   confirmed,
+		"Balance":     balance,
+		"SearchQuery": searchQuery,
 	}
 	RenderTemplate(w, "transactions.html", data)
 }

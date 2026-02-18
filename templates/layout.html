@@ -24,13 +24,14 @@
                 <a href="/calendar" {{if eq .ActiveNav "calendar"}}class="active"{{end}}>Calendar</a>
             </div>
             <div class="nav-dropdown nav-dropdown-right">
-                <span class="nav-dropdown-toggle {{if or (eq .ActiveNav "bills") (eq .ActiveNav "income") (eq .ActiveNav "budgets") (eq .ActiveNav "expenditures") (eq .ActiveNav "transactions")}}active{{end}}">Options &#x25BE;</span>
+                <span class="nav-dropdown-toggle {{if or (eq .ActiveNav "bills") (eq .ActiveNav "income") (eq .ActiveNav "budgets") (eq .ActiveNav "expenditures") (eq .ActiveNav "transactions") (eq .ActiveNav "backup")}}active{{end}}">Options &#x25BE;</span>
                 <div class="nav-dropdown-menu">
                     <a href="/bills" {{if eq .ActiveNav "bills"}}class="active"{{end}}>Bills</a>
                     <a href="/income" {{if eq .ActiveNav "income"}}class="active"{{end}}>Income</a>
                     <a href="/budgets" {{if eq .ActiveNav "budgets"}}class="active"{{end}}>Budgets</a>
                     <a href="/expenditures" {{if eq .ActiveNav "expenditures"}}class="active"{{end}}>Expenditures</a>
                     <a href="/transactions" {{if eq .ActiveNav "transactions"}}class="active"{{end}}>Transactions</a>
+                    <a href="/backup" {{if eq .ActiveNav "backup"}}class="active"{{end}}>Backup &amp; Restore</a>
                 </div>
             </div>
         </div>

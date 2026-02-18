@@ -4,10 +4,11 @@ import "time"
 
 // Occurrence represents a bill or income event on a specific date
 type Occurrence struct {
-	Name   string
-	Amount int
-	Date   time.Time
-	Type   string // "bill" or "income"
+	Name      string
+	Amount    int
+	Date      time.Time
+	Type      string // "bill" or "income"
+	IsPrimary bool   // true for the designated primary income source
 }
 
 // CalendarDay represents a single day in the calendar view
@@ -237,10 +238,11 @@ func UpcomingIncomeOccurrences() ([]Occurrence, error) {
 			continue
 		}
 		all = append(all, Occurrence{
-			Name:   item.Name,
-			Amount: item.Amount,
-			Date:   dates[0],
-			Type:   "income",
+			Name:      item.Name,
+			Amount:    item.Amount,
+			Date:      dates[0],
+			Type:      "income",
+			IsPrimary: item.IsPrimary,
 		})
 	}
 
@@ -263,7 +265,14 @@ func BillsDueBeforeNextPaycheck() (total int, paycheckDate time.Time, err error)
 
 	var cutoff time.Time
 	if len(incomeOcc) > 0 {
+		// Use the primary income source if one is marked; otherwise first upcoming.
 		cutoff = incomeOcc[0].Date
+		for _, occ := range incomeOcc {
+			if occ.IsPrimary {
+				cutoff = occ.Date
+				break
+			}
+		}
 	} else {
 		// No paycheck found — fallback to end of current month.
 		cutoff = time.Date(today.Year(), today.Month()+1, 0, 0, 0, 0, 0, time.Local)

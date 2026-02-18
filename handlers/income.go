@@ -27,6 +27,8 @@ func IncomeRouter(w http.ResponseWriter, r *http.Request) {
 		IncomeUpdateHandler(w, r)
 	case strings.HasSuffix(path, "/delete"):
 		IncomeDeleteHandler(w, r)
+	case strings.HasSuffix(path, "/set-primary"):
+		IncomeSetPrimaryHandler(w, r)
 	default:
 		http.NotFound(w, r)
 	}
@@ -141,6 +143,29 @@ func IncomeUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		SetFlash(w, "Income entry updated successfully.")
 	}
 
+	http.Redirect(w, r, "/income", http.StatusSeeOther)
+}
+
+func IncomeSetPrimaryHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Redirect(w, r, "/income", http.StatusSeeOther)
+		return
+	}
+
+	idStr := strings.TrimPrefix(r.URL.Path, "/income/")
+	idStr = strings.TrimSuffix(idStr, "/set-primary")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	if err := models.SetPrimaryIncome(id); err != nil {
+		log.Printf("SetPrimaryIncome error: %v", err)
+		SetFlash(w, "Failed to set primary income.")
+	} else {
+		SetFlash(w, "Primary income source updated.")
+	}
 	http.Redirect(w, r, "/income", http.StatusSeeOther)
 }
 

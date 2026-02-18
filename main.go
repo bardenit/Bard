@@ -62,6 +62,10 @@ func main() {
 	mux.HandleFunc("/transactions", handlers.TransactionsRouter)
 	mux.HandleFunc("/transactions/{path...}", handlers.TransactionsRouter)
 
+	// Backup & Restore
+	mux.HandleFunc("/backup", handlers.BackupRouter)
+	mux.HandleFunc("/backup/{path...}", handlers.BackupRouter)
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"

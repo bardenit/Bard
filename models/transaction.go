@@ -146,6 +146,60 @@ func ListConfirmedTransactions(limit int) ([]ImportedTransaction, error) {
 	return items, rows.Err()
 }
 
+// SearchConfirmedTransactions returns confirmed transactions whose description
+// or category name contains the query string (case-insensitive). Max 200 rows.
+func SearchConfirmedTransactions(query string) ([]ImportedTransaction, error) {
+	q := "%" + strings.ToUpper(strings.TrimSpace(query)) + "%"
+	rows, err := db.DB.Query(`
+		SELECT
+			t.id, t.account_name, t.processed_date, t.description, t.credit_or_debit,
+			t.amount, t.balance, t.category_id, t.auto_category_id,
+			COALESCE(bc1.name, ''), COALESCE(bc2.name, ''),
+			t.is_duplicate_flag, t.is_confirmed, t.is_dismissed,
+			t.source_file, t.imported_at
+		FROM imported_transactions t
+		LEFT JOIN budget_categories bc1 ON bc1.id = t.category_id
+		LEFT JOIN budget_categories bc2 ON bc2.id = t.auto_category_id
+		WHERE t.is_confirmed = 1
+		  AND (UPPER(t.description) LIKE ? OR UPPER(COALESCE(bc1.name, '')) LIKE ?)
+		ORDER BY t.processed_date DESC
+		LIMIT 200
+	`, q, q)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var items []ImportedTransaction
+	for rows.Next() {
+		var t ImportedTransaction
+		var balance, catID, autoCatID sql.NullInt64
+		if err := rows.Scan(
+			&t.ID, &t.AccountName, &t.ProcessedDate, &t.Description, &t.CreditOrDebit,
+			&t.Amount, &balance, &catID, &autoCatID,
+			&t.CategoryName, &t.AutoCatName,
+			&t.IsDuplicateFlag, &t.IsConfirmed, &t.IsDismissed,
+			&t.SourceFile, &t.ImportedAt,
+		); err != nil {
+			return nil, err
+		}
+		if balance.Valid {
+			v := int(balance.Int64)
+			t.Balance = &v
+		}
+		if catID.Valid {
+			v := int(catID.Int64)
+			t.CategoryID = &v
+		}
+		if autoCatID.Valid {
+			v := int(autoCatID.Int64)
+			t.AutoCategoryID = &v
+		}
+		items = append(items, t)
+	}
+	return items, rows.Err()
+}
+
 // GetTransaction returns a single imported transaction by ID.
 func GetTransaction(id int) (ImportedTransaction, error) {
 	var t ImportedTransaction

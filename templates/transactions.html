@@ -116,12 +116,19 @@
 </div>
 
 <!-- Confirmed Transactions -->
-{{if .Confirmed}}
-<details class="card">
+{{if or .Confirmed .SearchQuery}}
+<details class="card" {{if .SearchQuery}}open{{end}}>
     <summary style="cursor:pointer; font-weight:600; font-size:1.05rem;">
-        Recently Confirmed ({{len .Confirmed}})
+        Confirmed Transactions{{if .SearchQuery}} — "{{.SearchQuery}}"{{else}} ({{len .Confirmed}}){{end}}
     </summary>
     <div style="margin-top:1rem;">
+    <form method="GET" action="/transactions" style="display:flex; gap:0.4rem; margin-bottom:1rem; align-items:center; flex-wrap:wrap;">
+        <input type="text" name="q" placeholder="Search description or category..."
+            value="{{.SearchQuery}}" style="flex:1; min-width:200px; max-width:400px; font-size:0.9rem;">
+        <button type="submit" class="btn btn-small">Search</button>
+        {{if .SearchQuery}}<a href="/transactions" class="btn btn-link btn-small">Clear</a>{{end}}
+    </form>
+    {{if .Confirmed}}
     <div class="table-wrapper">
     <table>
         <thead>
@@ -152,6 +159,9 @@
         </tbody>
     </table>
     </div>
+    {{else if .SearchQuery}}
+    <p style="color:var(--text-muted);">No transactions found matching "{{.SearchQuery}}".</p>
+    {{end}}
     </div>
 </details>
 {{end}}

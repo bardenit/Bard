@@ -14,6 +14,7 @@ type Income struct {
 	Amount      int
 	DepositDate string
 	Recurrence  string
+	IsPrimary   bool
 	IsActive    bool
 	CreatedAt   string
 	UpdatedAt   string
@@ -29,7 +30,7 @@ func (i Income) DepositDateFormatted() string {
 
 func ListIncome() ([]Income, error) {
 	rows, err := db.DB.Query(`
-		SELECT id, name, amount, deposit_date, recurrence, is_active, created_at, updated_at
+		SELECT id, name, amount, deposit_date, recurrence, is_primary, is_active, created_at, updated_at
 		FROM income ORDER BY deposit_date ASC
 	`)
 	if err != nil {
@@ -40,7 +41,7 @@ func ListIncome() ([]Income, error) {
 	var items []Income
 	for rows.Next() {
 		var i Income
-		if err := rows.Scan(&i.ID, &i.Name, &i.Amount, &i.DepositDate, &i.Recurrence, &i.IsActive, &i.CreatedAt, &i.UpdatedAt); err != nil {
+		if err := rows.Scan(&i.ID, &i.Name, &i.Amount, &i.DepositDate, &i.Recurrence, &i.IsPrimary, &i.IsActive, &i.CreatedAt, &i.UpdatedAt); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -50,7 +51,7 @@ func ListIncome() ([]Income, error) {
 
 func ListActiveIncome() ([]Income, error) {
 	rows, err := db.DB.Query(`
-		SELECT id, name, amount, deposit_date, recurrence, is_active, created_at, updated_at
+		SELECT id, name, amount, deposit_date, recurrence, is_primary, is_active, created_at, updated_at
 		FROM income WHERE is_active = 1 ORDER BY deposit_date ASC
 	`)
 	if err != nil {
@@ -61,7 +62,7 @@ func ListActiveIncome() ([]Income, error) {
 	var items []Income
 	for rows.Next() {
 		var i Income
-		if err := rows.Scan(&i.ID, &i.Name, &i.Amount, &i.DepositDate, &i.Recurrence, &i.IsActive, &i.CreatedAt, &i.UpdatedAt); err != nil {
+		if err := rows.Scan(&i.ID, &i.Name, &i.Amount, &i.DepositDate, &i.Recurrence, &i.IsPrimary, &i.IsActive, &i.CreatedAt, &i.UpdatedAt); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -72,9 +73,9 @@ func ListActiveIncome() ([]Income, error) {
 func GetIncome(id int) (Income, error) {
 	var i Income
 	err := db.DB.QueryRow(`
-		SELECT id, name, amount, deposit_date, recurrence, is_active, created_at, updated_at
+		SELECT id, name, amount, deposit_date, recurrence, is_primary, is_active, created_at, updated_at
 		FROM income WHERE id = ?
-	`, id).Scan(&i.ID, &i.Name, &i.Amount, &i.DepositDate, &i.Recurrence, &i.IsActive, &i.CreatedAt, &i.UpdatedAt)
+	`, id).Scan(&i.ID, &i.Name, &i.Amount, &i.DepositDate, &i.Recurrence, &i.IsPrimary, &i.IsActive, &i.CreatedAt, &i.UpdatedAt)
 	if err == sql.ErrNoRows {
 		return i, fmt.Errorf("income not found")
 	}
@@ -103,4 +104,22 @@ func UpdateIncome(id int, name string, amount int, depositDate, recurrence strin
 func DeleteIncome(id int) error {
 	_, err := db.DB.Exec(`DELETE FROM income WHERE id = ?`, id)
 	return err
+}
+
+// SetPrimaryIncome marks a single income item as the primary paycheck source.
+// All other income items have is_primary cleared in the same transaction.
+func SetPrimaryIncome(id int) error {
+	tx, err := db.DB.Begin()
+	if err != nil {
+		return err
+	}
+	if _, err := tx.Exec(`UPDATE income SET is_primary = 0`); err != nil {
+		tx.Rollback()
+		return err
+	}
+	if _, err := tx.Exec(`UPDATE income SET is_primary = 1 WHERE id = ?`, id); err != nil {
+		tx.Rollback()
+		return err
+	}
+	return tx.Commit()
 }
