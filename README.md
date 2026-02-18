@@ -2,7 +2,7 @@
 
 A self-hosted personal budgeting web application. Single-user, lightweight, no external dependencies. Installable as a PWA on desktop and mobile.
 
-**Current version: 2.3**
+**Current version: 2.4**
 
 ## Features
 
@@ -99,6 +99,50 @@ docker compose up -d  # restart with new version
 | `DB_PATH` | `budget.db` | Path to SQLite database file |
 | `TEMPLATE_DIR` | `templates` | Path to HTML templates |
 | `STATIC_DIR` | `static` | Path to static assets |
+| `AUTH_USERNAME` | _(unset)_ | Username for password login |
+| `AUTH_PASSWORD_HASH` | _(unset)_ | bcrypt hash of password (see Authentication section) |
+| `SESSION_SECRET` | _(random)_ | HMAC key for session cookies; if unset, sessions are lost on restart |
+| `OIDC_ISSUER` | _(unset)_ | Pocket ID base URL e.g. `https://id.example.com` |
+| `OIDC_CLIENT_ID` | _(unset)_ | OAuth2 client ID |
+| `OIDC_CLIENT_SECRET` | _(unset)_ | OAuth2 client secret |
+| `OIDC_REDIRECT_URL` | _(unset)_ | Full callback URL e.g. `https://budget.example.com/login/oidc/callback` |
+
+## Authentication
+
+Auth is fully opt-in. If none of the auth env vars are set, the app works exactly as before — no login required.
+
+### Password Login
+
+1. Generate a bcrypt hash of your password:
+   ```bash
+   htpasswd -bnBC 12 "" yourpassword | tr -d ':\n' | sed 's/$2y/$2a/'
+   ```
+2. Set env vars:
+   ```
+   AUTH_USERNAME=admin
+   AUTH_PASSWORD_HASH=<hash from above>
+   SESSION_SECRET=<random 32+ char string>
+   ```
+
+### OIDC / Pocket ID (SSO)
+
+1. In Pocket ID, create a new OAuth2 client.
+2. Set the **Redirect URI** to `https://budget.example.com/login/oidc/callback` (your actual domain). This URL is also displayed on the login page itself when OIDC is configured.
+3. Copy the **Client ID** and **Client Secret**.
+4. Set env vars:
+   ```
+   OIDC_ISSUER=https://id.example.com
+   OIDC_CLIENT_ID=<client id>
+   OIDC_CLIENT_SECRET=<client secret>
+   OIDC_REDIRECT_URL=https://budget.example.com/login/oidc/callback
+   SESSION_SECRET=<random 32+ char string>
+   ```
+5. At startup, the redirect URI is also printed to the container logs so you can confirm it:
+   ```
+   Auth: OIDC enabled — register this redirect URI in Pocket ID: https://budget.example.com/login/oidc/callback
+   ```
+
+Both methods can be enabled simultaneously — the login page will show a password form and an SSO button.
 
 ## PWA Install
 

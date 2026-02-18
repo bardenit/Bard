@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Budget</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32.png">
+    <style>
+        .login-wrap {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg);
+            padding: 1.5rem;
+        }
+        .login-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            width: 100%;
+            max-width: 380px;
+        }
+        .login-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            color: var(--text);
+        }
+        .login-error {
+            background: #f8d7da;
+            color: #842029;
+            border: 1px solid #f5c2c7;
+            border-radius: var(--radius);
+            padding: 0.6rem 0.9rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.35rem;
+            color: var(--text);
+        }
+        .form-group input {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.95rem;
+            background: var(--surface);
+            color: var(--text);
+            outline: none;
+        }
+        .form-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(13,110,253,0.15);
+        }
+        .btn-login {
+            width: 100%;
+            padding: 0.55rem 1rem;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 0.25rem;
+        }
+        .btn-login:hover {
+            background: var(--primary-hover);
+        }
+        .or-divider {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin: 1.25rem 0;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        .or-divider::before,
+        .or-divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+        .btn-sso {
+            display: block;
+            width: 100%;
+            padding: 0.55rem 1rem;
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.95rem;
+            font-weight: 500;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .btn-sso:hover {
+            background: var(--bg);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="login-wrap">
+        <div class="login-card">
+            <div class="login-title">Budget</div>
+
+            {{if .Error}}
+            <div class="login-error">{{.Error}}</div>
+            {{end}}
+
+            {{if .PasswordEnabled}}
+            <form method="POST" action="/login">
+                <input type="hidden" name="next" value="{{.Next}}">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" autocomplete="username" autofocus required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" autocomplete="current-password" required>
+                </div>
+                <button type="submit" class="btn-login">Sign in</button>
+            </form>
+            {{end}}
+
+            {{if and .PasswordEnabled .OIDCEnabled}}
+            <div class="or-divider">or</div>
+            {{end}}
+
+            {{if .OIDCEnabled}}
+            <a href="/login/oidc?next={{.Next}}" class="btn-sso">Sign in with SSO</a>
+
+            <p style="font-size:0.75rem; color:var(--text-muted); text-align:center; margin-top:1.5rem;">
+                Pocket ID redirect URI:<br><code>{{.OIDCRedirectURL}}</code>
+            </p>
+            {{end}}
+        </div>
+    </div>
+</body>
+</html>

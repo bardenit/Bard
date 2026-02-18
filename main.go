@@ -21,6 +21,7 @@ func main() {
 		templateDir = "templates"
 	}
 	handlers.InitTemplates(templateDir)
+	handlers.InitAuth()
 
 	// Start background upgrade checker using the embedded build timestamp.
 	handlers.StartUpgradeChecker(BuildTime)
@@ -31,6 +32,13 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
+
+	// Auth routes (always registered; handlers self-check AuthEnabled)
+	mux.HandleFunc("GET /login", handlers.LoginPageHandler)
+	mux.HandleFunc("POST /login", handlers.LoginPostHandler)
+	mux.HandleFunc("GET /login/oidc", handlers.OIDCLoginHandler)
+	mux.HandleFunc("GET /login/oidc/callback", handlers.OIDCCallbackHandler)
+	mux.HandleFunc("GET /logout", handlers.LogoutHandler)
 
 	// Static files
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(staticDir))))
@@ -79,8 +87,10 @@ func main() {
 		port = "8080"
 	}
 
+	handler := handlers.AuthMiddleware(mux)
+
 	log.Printf("Server starting on :%s (v%s, built %s)", port, handlers.AppVersion, BuildTime)
-	if err := http.ListenAndServe(":"+port, mux); err != nil {
+	if err := http.ListenAndServe(":"+port, handler); err != nil {
 		log.Fatal(err)
 	}
 }

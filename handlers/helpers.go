@@ -44,7 +44,7 @@ func InitTemplates(dir string) {
 		"backup.html",
 	}
 
-	pageCache = make(map[string]*template.Template, len(pages))
+	pageCache = make(map[string]*template.Template, len(pages)+1)
 	layoutPath := filepath.Join(dir, "layout.html")
 
 	for _, page := range pages {
@@ -54,6 +54,10 @@ func InitTemplates(dir string) {
 		)
 		pageCache[page] = t
 	}
+
+	// login.html is a standalone page (not paired with layout).
+	loginTmpl := template.Must(template.New("").Funcs(funcMap).ParseFiles(filepath.Join(dir, "login.html")))
+	pageCache["login.html"] = loginTmpl
 }
 
 func RenderTemplate(w http.ResponseWriter, name string, data PageData) {
@@ -66,11 +70,12 @@ func RenderTemplate(w http.ResponseWriter, name string, data PageData) {
 
 	// Merge Extra fields into a flat template data map
 	td := map[string]interface{}{
-		"Title":            data.Title,
-		"ActiveNav":        data.ActiveNav,
-		"Flash":            data.Flash,
+		"Title":         data.Title,
+		"ActiveNav":     data.ActiveNav,
+		"Flash":         data.Flash,
 		"Version":       AppVersion,
 		"LatestVersion": LatestVersion(),
+		"AuthEnabled":   AuthEnabled,
 	}
 	for k, v := range data.Extra {
 		td[k] = v

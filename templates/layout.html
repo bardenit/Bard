@@ -42,6 +42,9 @@
                     <a href="/backup" {{if eq .ActiveNav "backup"}}class="active"{{end}}>Backup &amp; Restore</a>
                 </div>
             </div>
+            {{if .AuthEnabled}}
+            <a href="/logout" class="btn btn-sm btn-secondary" style="margin-left:0.5rem;">Logout</a>
+            {{end}}
         </div>
     </nav>
     {{if .Flash}}
