@@ -1,0 +1,18 @@
+{
+    # Disable admin API (not needed for simple reverse proxy)
+    admin off
+}
+
+# HTTPS on port 443 — Caddy issues its own internal cert.
+# First visit will show a browser warning; click Advanced → Continue.
+# To trust the cert permanently on each PC, see README for the one-time
+# "Install Caddy Root CA" steps.
+:443 {
+    tls internal
+    reverse_proxy budget:8080
+}
+
+# Redirect plain HTTP to HTTPS
+:80 {
+    redir https://{host}{uri} permanent
+}

@@ -41,30 +41,38 @@ Open http://localhost:8080
 
 Data persists in the `budget-data` Docker volume.
 
-### Docker Compose
+### Docker Compose (with HTTPS — recommended)
 
-Create a `docker-compose.yml`:
-
-```yaml
-services:
-  budget:
-    image: jbarden75/budget:latest
-    container_name: budget
-    ports:
-      - "8080:8080"
-    volumes:
-      - budget-data:/data
-    restart: unless-stopped
-
-volumes:
-  budget-data:
-```
-
-Then run:
+The repo includes a `docker-compose.yml` and `Caddyfile` that add a Caddy reverse
+proxy so the app is reachable over **HTTPS** from any device on your network.
+HTTPS is required for the PWA "Install App" prompt to work in Chrome and Edge.
 
 ```bash
 docker compose up -d
 ```
+
+- `http://localhost:8080` — direct access on the Docker host (no HTTPS, still works)
+- `https://YOUR-PC-IP` — HTTPS via Caddy (required for PWA install on other devices)
+
+**First visit over HTTPS:** your browser will show "Your connection isn't private"
+because Caddy uses its own internal certificate authority. Click
+**Advanced → Continue to site** once. The warning won't appear again on that browser.
+
+**Remove the warning permanently (optional, Windows):**
+
+```powershell
+# Run in PowerShell as Administrator
+docker cp budget-proxy:/data/caddy/pki/authorities/local/root.crt C:\caddy-root.crt
+certutil -addstore -f "ROOT" C:\caddy-root.crt
+```
+
+Run this on each Windows PC. After that, no more warning and Edge will offer the
+Install App button automatically on every visit.
+
+**iPhone:** In Safari, visit `https://YOUR-PC-IP` → accept the warning → go to
+Settings → General → VPN & Device Management → install the Caddy profile →
+Settings → General → About → Certificate Trust Settings → enable it.
+Then "Add to Home Screen" works with no warning.
 
 ### Environment Variables
 
