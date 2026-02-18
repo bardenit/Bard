@@ -2,14 +2,11 @@ services:
   budget:
     image: jbarden75/budget:latest
     container_name: budget
-    environment:
-      - DB_PATH=/data/budget.db
+    ports:
+      - "8080:8080"
     volumes:
       - budget-data:/data
     restart: unless-stopped
-    # Port 8080 still available on the Docker host for localhost access
-    ports:
-      - "8080:8080"
 
   caddy:
     image: caddy:2-alpine
@@ -27,6 +24,6 @@ services:
 
 volumes:
   budget-data:
-    name: budget-data   # matches the volume created by plain "docker run" so existing data is preserved
+    name: budget-data   # reuses your existing volume — no data loss
   caddy-data:
   caddy-config:
