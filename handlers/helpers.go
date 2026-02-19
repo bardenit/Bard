@@ -42,6 +42,7 @@ func InitTemplates(dir string) {
 		"calendar.html",
 		"transactions.html",
 		"backup.html",
+		"settings.html",
 	}
 
 	pageCache = make(map[string]*template.Template, len(pages)+1)
@@ -200,4 +201,17 @@ func dict(values ...interface{}) map[string]interface{} {
 		}
 	}
 	return m
+}
+
+// SecurityHeadersMiddleware adds security-related HTTP response headers to every response.
+func SecurityHeadersMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		h := w.Header()
+		h.Set("Content-Security-Policy",
+			"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; manifest-src 'self'; worker-src 'self'; frame-ancestors 'none'")
+		h.Set("X-Frame-Options", "DENY")
+		h.Set("Referrer-Policy", "strict-origin-when-cross-origin")
+		h.Set("Permissions-Policy", "geolocation=(), microphone=(), camera=(), payment=()")
+		next.ServeHTTP(w, r)
+	})
 }

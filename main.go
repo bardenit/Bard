@@ -82,12 +82,17 @@ func main() {
 	mux.HandleFunc("/backup", handlers.BackupRouter)
 	mux.HandleFunc("/backup/{path...}", handlers.BackupRouter)
 
+	// Settings
+	mux.HandleFunc("GET /settings", handlers.SettingsPageHandler)
+	mux.HandleFunc("POST /settings/password", handlers.SettingsPasswordHandler)
+	mux.HandleFunc("POST /settings/oidc", handlers.SettingsOIDCHandler)
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
-	handler := handlers.AuthMiddleware(mux)
+	handler := handlers.SecurityHeadersMiddleware(handlers.AuthMiddleware(mux))
 
 	log.Printf("Server starting on :%s (v%s, built %s)", port, handlers.AppVersion, BuildTime)
 	if err := http.ListenAndServe(":"+port, handler); err != nil {

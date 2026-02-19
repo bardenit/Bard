@@ -17,8 +17,8 @@
     <div id="pwa-install-banner" style="display:none; align-items:center; justify-content:space-between; gap:1rem; padding:0.6rem 1.5rem; background:#1e1b4b; color:#fff; font-size:0.9rem; flex-wrap:wrap;">
         <span>&#128640; Install <strong>Budget</strong> as an app for quick access from your desktop.</span>
         <div style="display:flex; gap:0.5rem; align-items:center;">
-            <button onclick="pwaInstall()" style="background:#0d6efd; color:#fff; border:none; padding:0.35rem 0.9rem; border-radius:4px; cursor:pointer; font-size:0.85rem;">Install</button>
-            <button onclick="pwaDismiss()" style="background:transparent; color:#aaa; border:none; font-size:1.1rem; cursor:pointer; line-height:1;" title="Dismiss">&times;</button>
+            <button id="pwa-install-btn" style="background:#0d6efd; color:#fff; border:none; padding:0.35rem 0.9rem; border-radius:4px; cursor:pointer; font-size:0.85rem;">Install</button>
+            <button id="pwa-dismiss-btn" style="background:transparent; color:#aaa; border:none; font-size:1.1rem; cursor:pointer; line-height:1;" title="Dismiss">&times;</button>
         </div>
     </div>
     <nav class="nav">
@@ -32,7 +32,7 @@
                 <a href="/calendar" {{if eq .ActiveNav "calendar"}}class="active"{{end}}>Calendar</a>
             </div>
             <div class="nav-dropdown nav-dropdown-right">
-                <span class="nav-dropdown-toggle {{if or (eq .ActiveNav "bills") (eq .ActiveNav "income") (eq .ActiveNav "budgets") (eq .ActiveNav "expenditures") (eq .ActiveNav "transactions") (eq .ActiveNav "backup")}}active{{end}}">Options &#x25BE;</span>
+                <span class="nav-dropdown-toggle {{if or (eq .ActiveNav "bills") (eq .ActiveNav "income") (eq .ActiveNav "budgets") (eq .ActiveNav "expenditures") (eq .ActiveNav "transactions") (eq .ActiveNav "backup") (eq .ActiveNav "settings")}}active{{end}}">Options &#x25BE;</span>
                 <div class="nav-dropdown-menu">
                     <a href="/bills" {{if eq .ActiveNav "bills"}}class="active"{{end}}>Bills</a>
                     <a href="/income" {{if eq .ActiveNav "income"}}class="active"{{end}}>Income</a>
@@ -40,6 +40,7 @@
                     <a href="/expenditures" {{if eq .ActiveNav "expenditures"}}class="active"{{end}}>Expenditures</a>
                     <a href="/transactions" {{if eq .ActiveNav "transactions"}}class="active"{{end}}>Transactions</a>
                     <a href="/backup" {{if eq .ActiveNav "backup"}}class="active"{{end}}>Backup &amp; Restore</a>
+                    {{if .AuthEnabled}}<a href="/settings" {{if eq .ActiveNav "settings"}}class="active"{{end}}>Settings</a>{{end}}
                 </div>
             </div>
             {{if .AuthEnabled}}

@@ -2,7 +2,48 @@ package db
 
 import (
 	"log"
+	"os"
+
+	"golang.org/x/crypto/bcrypt"
 )
+
+// SeedDefaultCredentials writes a default admin/budget account (must_change_password=1)
+// when no env-var credentials and no DB credentials exist yet. Idempotent.
+func SeedDefaultCredentials() {
+	// Skip if env vars already configure password auth.
+	if os.Getenv("AUTH_USERNAME") != "" || os.Getenv("AUTH_PASSWORD_HASH") != "" {
+		return
+	}
+
+	// Skip if DB already has a username set.
+	var count int
+	if err := DB.QueryRow(`SELECT COUNT(*) FROM settings WHERE key = 'auth_username'`).Scan(&count); err != nil {
+		log.Printf("Seed: failed to check auth_username: %v", err)
+		return
+	}
+	if count > 0 {
+		return
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte("budget"), bcrypt.DefaultCost)
+	if err != nil {
+		log.Printf("Seed: failed to hash default password: %v", err)
+		return
+	}
+
+	pairs := map[string]string{
+		"auth_username":            "admin",
+		"auth_password_hash":       string(hash),
+		"auth_must_change_password": "1",
+	}
+	for k, v := range pairs {
+		if _, err := DB.Exec(`INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)`, k, v); err != nil {
+			log.Printf("Seed: failed to set %s: %v", k, err)
+			return
+		}
+	}
+	log.Println("Seed: default credentials seeded (admin/budget) — password change required on first login")
+}
 
 // SeedInitialData inserts default budget categories and transaction rules on a fresh DB.
 // It is a no-op if any budget_categories rows already exist.
