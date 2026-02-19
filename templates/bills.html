@@ -1,9 +1,9 @@
 {{define "content"}}
 <h1>Bills</h1>
 
-<div class="card" style="margin-bottom: 1.5rem;">
+<div class="card mb-6">
     {{if .Editing}}
-    <h2 style="margin-bottom: 1rem;">Edit Bill</h2>
+    <h2 class="mb-4">Edit Bill</h2>
     <form method="POST" action="/bills/{{.Bill.ID}}/update">
         <div class="form-row">
             <div class="form-group">
@@ -40,7 +40,7 @@
         </div>
     </form>
     {{else}}
-    <h2 style="margin-bottom: 1rem;">Add Bill</h2>
+    <h2 class="mb-4">Add Bill</h2>
     <form method="POST" action="/bills/create">
         <div class="form-row">
             <div class="form-group">
@@ -101,7 +101,7 @@
             </td>
             <td>
                 <a href="/bills/{{.ID}}/edit" class="btn btn-link btn-sm">Edit</a>
-                <form method="POST" action="/bills/{{.ID}}/delete" style="display:inline" data-confirm="Delete this bill?">
+                <form method="POST" action="/bills/{{.ID}}/delete" class="form-inline" data-confirm="Delete this bill?">
                     <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                 </form>
             </td>
@@ -111,7 +111,7 @@
 </table>
 {{else}}
 {{if not .Editing}}
-<p style="color: var(--text-muted); text-align: center; padding: 2rem;">No bills yet. Add one above.</p>
+<p class="empty-msg">No bills yet. Add one above.</p>
 {{end}}
 {{end}}
 {{end}}

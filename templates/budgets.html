@@ -1,7 +1,7 @@
 {{define "content"}}
 <h1>Budgets</h1>
 
-<div class="summary-grid" style="margin-bottom: 1.5rem;">
+<div class="summary-grid mb-6">
     <div class="summary-card">
         <div class="label">Total Monthly Budgeted</div>
         <div class="value">{{formatMoney .TotalBudgeted}}</div>
@@ -11,8 +11,8 @@
 <div class="two-col">
     <div>
         {{if .Editing}}
-        <div class="card" style="margin-bottom: 1rem;">
-            <h2 style="margin-bottom: 1rem;">Edit Category & Budget</h2>
+        <div class="card mb-4">
+            <h2 class="mb-4">Edit Category & Budget</h2>
             <form method="POST" action="/budgets/category/{{.EditCategory.ID}}/update">
                 <div class="form-group">
                     <label for="name">Category Name</label>
@@ -50,8 +50,8 @@
             </form>
         </div>
         {{else}}
-        <div class="card" style="margin-bottom: 1rem;">
-            <h2 style="margin-bottom: 1rem;">Add Category</h2>
+        <div class="card mb-4">
+            <h2 class="mb-4">Add Category</h2>
             <form method="POST" action="/budgets/category/create">
                 <div class="form-group">
                     <label for="name">Category Name</label>
@@ -73,7 +73,7 @@
         </div>
 
         <div class="card">
-            <h2 style="margin-bottom: 1rem;">Set Budget</h2>
+            <h2 class="mb-4">Set Budget</h2>
             <form method="POST" action="/budgets/set">
                 <div class="form-group">
                     <label for="category_id">Category</label>
@@ -111,21 +111,21 @@
 
     <div>
         <div class="card">
-            <h2 style="margin-bottom: 1rem;">Categories</h2>
+            <h2 class="mb-4">Categories</h2>
             {{if .Categories}}
             <ul class="budget-tree">
                 {{range .Categories}}
                 <li class="category">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="cat-row">
                         <strong>{{.Name}}</strong>
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <div class="cat-actions">
                             {{if .Budget}}
                             <span>{{formatMoney .Budget.Amount}} / {{.Budget.Recurrence}}</span>
                             {{else}}
-                            <span style="color: var(--text-muted);">No budget set</span>
+                            <span class="text-muted">No budget set</span>
                             {{end}}
                             <a href="/budgets/category/{{.ID}}/edit" class="btn btn-link btn-sm">Edit</a>
-                            <form method="POST" action="/budgets/category/{{.ID}}/delete" style="display:inline" data-confirm="Delete this category and all its subcategories?">
+                            <form method="POST" action="/budgets/category/{{.ID}}/delete" class="form-inline" data-confirm="Delete this category and all its subcategories?">
                                 <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                             </form>
                         </div>
@@ -134,16 +134,16 @@
                     <ul class="budget-tree">
                         {{range .Children}}
                         <li class="subcategory">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div class="cat-row">
                                 <span>{{.Name}}</span>
-                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <div class="cat-actions">
                                     {{if .Budget}}
                                     <span>{{formatMoney .Budget.Amount}} / {{.Budget.Recurrence}}</span>
                                     {{else}}
-                                    <span style="color: var(--text-muted);">No budget</span>
+                                    <span class="text-muted">No budget</span>
                                     {{end}}
                                     <a href="/budgets/category/{{.ID}}/edit" class="btn btn-link btn-sm">Edit</a>
-                                    <form method="POST" action="/budgets/category/{{.ID}}/delete" style="display:inline" data-confirm="Delete this subcategory?">
+                                    <form method="POST" action="/budgets/category/{{.ID}}/delete" class="form-inline" data-confirm="Delete this subcategory?">
                                         <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                                     </form>
                                 </div>
@@ -156,7 +156,7 @@
                 {{end}}
             </ul>
             {{else}}
-            <p style="color: var(--text-muted);">No categories yet. Create one to get started.</p>
+            <p class="empty-msg">No categories yet. Create one to get started.</p>
             {{end}}
         </div>
     </div>

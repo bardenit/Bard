@@ -1,13 +1,13 @@
 {{define "content"}}
 <h1>Backup &amp; Restore</h1>
 
-<div class="card" style="margin-bottom:1.5rem;">
-    <h2 style="margin-bottom:0.75rem;">Export Backup</h2>
-    <p style="color:var(--text-muted); margin-bottom:1rem; font-size:0.9rem;">
+<div class="card mb-6">
+    <h2 class="mb-3">Export Backup</h2>
+    <p class="text-muted text-sm mb-4">
         Downloads a JSON file containing all your data. Choose whether to include
         transaction history (imported CSV rows).
     </p>
-    <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+    <div class="action-group">
         <a href="/backup/export" class="btn">
             Export Without Transactions
         </a>
@@ -15,7 +15,7 @@
             Export Full Backup (with Transactions)
         </a>
     </div>
-    <p style="color:var(--text-muted); font-size:0.8rem; margin-top:0.75rem;">
+    <p class="text-muted text-xs mt-3">
         The export includes: bills, income, budget categories &amp; budgets, expenditures,
         categorization rules, and account balance.<br>
         The full backup additionally includes all imported transaction records.
@@ -23,26 +23,23 @@
 </div>
 
 <div class="card">
-    <h2 style="margin-bottom:0.75rem;">Restore from Backup</h2>
-    <p style="color:var(--text-muted); margin-bottom:0.5rem; font-size:0.9rem;">
+    <h2 class="mb-3">Restore from Backup</h2>
+    <p class="text-muted text-sm mb-2">
         Upload a previously exported JSON backup file. <strong>This will replace all existing
         data</strong> — bills, income, budgets, expenditures, and rules.
         Transactions are only restored if the backup file includes them.
     </p>
-    <p style="color:var(--danger); font-size:0.85rem; margin-bottom:1rem;">
+    <p class="text-danger text-sm mb-4">
         &#9888; This action cannot be undone. Export a backup first if you want to preserve your current data.
     </p>
-    <form method="POST" action="/backup/restore" enctype="multipart/form-data">
+    <form method="POST" action="/backup/restore" enctype="multipart/form-data" data-confirm="This will replace ALL existing data. Are you sure?">
         <div class="form-row">
             <div class="form-group">
                 <label for="backup_file">Backup JSON File</label>
                 <input type="file" id="backup_file" name="backup_file" accept=".json" required>
             </div>
             <div class="form-group form-group-submit">
-                <button type="submit" class="btn btn-danger"
-                    onclick="return confirm('This will replace ALL existing data. Are you sure?')">
-                    Restore
-                </button>
+                <button type="submit" class="btn btn-danger">Restore</button>
             </div>
         </div>
     </form>

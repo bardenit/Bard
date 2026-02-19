@@ -1,9 +1,9 @@
 {{define "content"}}
 <h1>Income</h1>
 
-<div class="card" style="margin-bottom: 1.5rem;">
+<div class="card mb-6">
     {{if .Editing}}
-    <h2 style="margin-bottom: 1rem;">Edit Income</h2>
+    <h2 class="mb-4">Edit Income</h2>
     <form method="POST" action="/income/{{.IncomeItem.ID}}/update">
         <div class="form-row">
             <div class="form-group">
@@ -40,7 +40,7 @@
         </div>
     </form>
     {{else}}
-    <h2 style="margin-bottom: 1rem;">Add Income</h2>
+    <h2 class="mb-4">Add Income</h2>
     <form method="POST" action="/income/create">
         <div class="form-row">
             <div class="form-group">
@@ -82,7 +82,7 @@
             <th>Deposit Date</th>
             <th>Recurrence</th>
             <th>Status</th>
-            <th style="text-align:center;" title="Primary paycheck source used for bill cutoff on dashboard">Primary</th>
+            <th class="td-center" title="Primary paycheck source used for bill cutoff on dashboard">Primary</th>
             <th>Actions</th>
         </tr>
     </thead>
@@ -90,7 +90,7 @@
         {{range .Income}}
         <tr>
             <td>{{.Name}}</td>
-            <td style="color: var(--success); font-weight: 600;">{{formatMoney .Amount}}</td>
+            <td class="amount-income">{{formatMoney .Amount}}</td>
             <td>{{.DepositDateFormatted}}</td>
             <td>{{.Recurrence}}</td>
             <td>
@@ -100,18 +100,18 @@
                 <span class="badge badge-inactive">Inactive</span>
                 {{end}}
             </td>
-            <td style="text-align:center;">
+            <td class="td-center">
                 {{if .IsPrimary}}
-                <span title="Primary paycheck" style="font-size:1.2em; color:#f59e0b;">&#9733;</span>
+                <span title="Primary paycheck" class="star-active">&#9733;</span>
                 {{else}}
-                <form method="POST" action="/income/{{.ID}}/set-primary" style="display:inline;">
-                    <button type="submit" class="btn btn-link btn-sm" title="Set as primary paycheck" style="font-size:1.1em; color:var(--text-muted);">&#9734;</button>
+                <form method="POST" action="/income/{{.ID}}/set-primary" class="form-inline">
+                    <button type="submit" class="btn btn-link btn-sm star-btn" title="Set as primary paycheck">&#9734;</button>
                 </form>
                 {{end}}
             </td>
             <td>
                 <a href="/income/{{.ID}}/edit" class="btn btn-link btn-sm">Edit</a>
-                <form method="POST" action="/income/{{.ID}}/delete" style="display:inline" data-confirm="Delete this income entry?">
+                <form method="POST" action="/income/{{.ID}}/delete" class="form-inline" data-confirm="Delete this income entry?">
                     <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                 </form>
             </td>
@@ -121,7 +121,7 @@
 </table>
 {{else}}
 {{if not .Editing}}
-<p style="color: var(--text-muted); text-align: center; padding: 2rem;">No income entries yet. Add one above.</p>
+<p class="empty-msg">No income entries yet. Add one above.</p>
 {{end}}
 {{end}}
 {{end}}

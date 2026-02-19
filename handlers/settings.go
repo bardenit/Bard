@@ -16,25 +16,58 @@ func SettingsPageHandler(w http.ResponseWriter, r *http.Request) {
 	pwEnvOverride := authConfig.pwEnvOverride
 	oidcEnvOverride := authConfig.oidcEnvOverride
 	mustChange := authConfig.mustChangePassword
+	activeUsername := authConfig.username
+	activeOIDCIssuer := authConfig.oidcIssuer
+	activeOIDCClientID := authConfig.oidcClientID
+	activeOIDCRedirectURL := authConfig.redirectURL
+	activeOIDCEnabled := authConfig.oidcEnabled
 	authMu.RUnlock()
 
-	// Always read DB values for display (env var notice will indicate if they're overridden).
-	dbUsername, _ := models.GetAuthUsername()
+	// Read DB values for the secret (we never expose env-var secrets in the UI).
 	dbIssuer, dbClientID, dbClientSecret, dbRedirectURL, dbOIDCEnabled, _ := models.GetOIDCSettings()
+	dbUsername, _ := models.GetAuthUsername()
+
+	// Resolve display values: active (effective) for non-sensitive fields;
+	// DB for sensitive (secret) or for reference when no env override.
+	displayUsername := activeUsername
+	if !pwEnvOverride {
+		// When not overridden, show DB value (same as active, but kept up-to-date by SettingsPasswordHandler).
+		displayUsername = dbUsername
+	}
+
+	var displayIssuer, displayClientID, displayRedirectURL string
+	var displayOIDCEnabled bool
+	var oidcSecretSet bool
+
+	if oidcEnvOverride {
+		// Show the active (env-var) values for non-sensitive fields.
+		displayIssuer = activeOIDCIssuer
+		displayClientID = activeOIDCClientID
+		displayRedirectURL = activeOIDCRedirectURL
+		displayOIDCEnabled = activeOIDCEnabled
+		oidcSecretSet = false // don't reveal whether env var secret is set
+	} else {
+		// Show DB values (editable).
+		displayIssuer = dbIssuer
+		displayClientID = dbClientID
+		displayRedirectURL = dbRedirectURL
+		displayOIDCEnabled = dbOIDCEnabled
+		oidcSecretSet = dbClientSecret != ""
+	}
 
 	RenderTemplate(w, "settings.html", PageData{
 		Title:     "Settings",
 		ActiveNav: "settings",
 		Flash:     GetFlash(w, r),
 		Extra: map[string]interface{}{
-			"Username":        dbUsername,
+			"Username":        displayUsername,
 			"PWEnvOverride":   pwEnvOverride,
 			"MustChange":      mustChange,
-			"OIDCEnabled":     dbOIDCEnabled,
-			"OIDCIssuer":      dbIssuer,
-			"OIDCClientID":    dbClientID,
-			"OIDCClientSecret": dbClientSecret,
-			"OIDCRedirectURL": dbRedirectURL,
+			"OIDCEnabled":     displayOIDCEnabled,
+			"OIDCIssuer":      displayIssuer,
+			"OIDCClientID":    displayClientID,
+			"OIDCSecretSet":   oidcSecretSet,
+			"OIDCRedirectURL": displayRedirectURL,
 			"OIDCEnvOverride": oidcEnvOverride,
 		},
 	})
@@ -89,7 +122,7 @@ func SettingsPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Update live authConfig if not overridden by env vars.
+	// Update live authConfig if env vars are not overriding it.
 	authMu.RLock()
 	pwEnvOverride := authConfig.pwEnvOverride
 	authMu.RUnlock()
@@ -119,6 +152,12 @@ func SettingsOIDCHandler(w http.ResponseWriter, r *http.Request) {
 	clientID := strings.TrimSpace(r.FormValue("oidc_client_id"))
 	clientSecret := strings.TrimSpace(r.FormValue("oidc_client_secret"))
 	redirectURL := strings.TrimSpace(r.FormValue("oidc_redirect_url"))
+
+	// If secret left blank, preserve the existing DB value.
+	if clientSecret == "" {
+		_, _, existing, _, _, _ := models.GetOIDCSettings()
+		clientSecret = existing
+	}
 
 	if err := models.SetOIDCSettings(issuer, clientID, clientSecret, redirectURL, enabled); err != nil {
 		log.Printf("Settings: save OIDC failed: %v", err)

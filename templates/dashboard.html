@@ -5,14 +5,14 @@
     <div class="summary-card">
         <div class="label">Upcoming Bills</div>
         <div class="value negative">{{formatMoney .UpcomingBillsTotal}}</div>
-        <div class="label" style="margin-top:0.4rem;">before next check on {{.NextPaycheckDate}}</div>
+        <div class="label mt-2">before next check on {{.NextPaycheckDate}}</div>
     </div>
     <div class="summary-card">
         <div class="label">Balance until next check</div>
         {{if .HasBalance}}
         <div class="value {{if ge .Balance 0}}positive{{else}}negative{{end}}">{{formatMoney .Balance}}</div>
         {{else}}
-        <div class="value" style="color:var(--text-muted); font-size:0.95rem;">Not set</div>
+        <div class="value value-muted">Not set</div>
         {{end}}
     </div>
 </div>
@@ -47,7 +47,7 @@
             {{end}}
         </ul>
         {{else}}
-        <p style="color: var(--text-muted)">No upcoming bills.</p>
+        <p class="text-muted">No upcoming bills.</p>
         {{end}}
     </div>
 
@@ -68,23 +68,22 @@
             {{end}}
         </ul>
         {{else}}
-        <p style="color: var(--text-muted)">No upcoming deposits.</p>
+        <p class="text-muted">No upcoming deposits.</p>
         {{end}}
     </div>
 </div>
 
 {{if .BudgetStatuses}}
-<details class="card" style="margin-top: 1.5rem;">
-    <summary style="cursor:pointer; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; list-style:none;">
-        <h2 style="margin:0;">Budget Status — {{.SelectedLabel}}</h2>
-        <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
-            <span style="font-size:0.85rem; color:var(--text-muted);">Budgeted: <strong>{{formatMoney .TotalBudgeted}}</strong></span>
+<details class="card mt-6">
+    <summary class="details-summary-flex">
+        <h2 class="m-0">Budget Status — {{.SelectedLabel}}</h2>
+        <div class="stat-meta-row">
+            <span class="stat-label">Budgeted: <strong>{{formatMoney .TotalBudgeted}}</strong></span>
             {{if .HasBalance}}
-            <span style="font-size:0.85rem; color:var(--text-muted);">Unallocated: <strong style="color:{{if ge .Unallocated 0}}var(--success){{else}}var(--danger){{end}};">{{formatMoney .Unallocated}}</strong></span>
+            <span class="stat-label">Unallocated: <strong class="{{if ge .Unallocated 0}}text-success{{else}}text-danger{{end}}">{{formatMoney .Unallocated}}</strong></span>
             {{end}}
-            <form method="GET" action="/" style="margin:0; display:flex; align-items:center; gap:0.5rem;">
-                <select name="__month_combined" id="month-select" style="font-size:0.9rem;"
-                    onchange="var v=this.value.split('-'); this.form.elements['year'].value=v[0]; this.form.elements['month'].value=v[1]; this.form.submit();">
+            <form method="GET" action="/" class="month-form">
+                <select name="__month_combined" id="month-select" class="select-sm">
                     {{range .MonthOptions}}
                     <option value="{{.Year}}-{{.Month}}" {{if .Selected}}selected{{end}}>{{.Label}}</option>
                     {{end}}
@@ -94,7 +93,7 @@
             </form>
         </div>
     </summary>
-    <div style="margin-top:1rem;">
+    <div class="details-body">
     <table>
         <thead>
             <tr>
@@ -107,21 +106,21 @@
         </thead>
         <tbody>
             {{range .BudgetStatuses}}
-            <tr{{if gt .Depth 0}} style="border-top: none;"{{end}}>
-                <td style="padding-left: {{if gt .Depth 0}}{{multiply .Depth 1.5}}rem{{else}}0{{end}};">{{if gt .Depth 0}}<span style="color: var(--text-muted); font-size: 0.9em;">{{.CategoryName}}</span>{{else}}<strong>{{.CategoryName}}</strong>{{end}}</td>
+            <tr>
+                <td data-depth="{{.Depth}}">{{if gt .Depth 0}}<span class="subcategory-name">{{.CategoryName}}</span>{{else}}<strong>{{.CategoryName}}</strong>{{end}}</td>
                 <td>{{formatMoney .Allocated}}</td>
                 <td>{{formatMoney .Spent}}</td>
                 <td class="{{if ge .Remaining 0}}positive{{else}}negative{{end}}">{{formatMoney .Remaining}}</td>
-                <td style="min-width: 150px;">
-                    <div style="background: var(--border); border-radius: 4px; height: 20px; overflow: hidden;">
-                        <div style="background: {{if gt .Percent 90}}var(--danger){{else if gt .Percent 70}}#f59e0b{{else}}var(--success){{end}}; height: 100%; width: {{.Percent}}%; transition: width 0.3s;"></div>
+                <td class="td-progress">
+                    <div class="progress-bar-wrap">
+                        <div class="progress-fill" data-percent="{{.Percent}}"></div>
                     </div>
                 </td>
             </tr>
             {{end}}
         </tbody>
         <tfoot>
-            <tr style="font-weight:600; border-top:2px solid var(--border);">
+            <tr class="tfoot-total">
                 <td>Total</td>
                 <td>{{formatMoney .BudgetTotalAllocated}}</td>
                 <td>{{formatMoney .BudgetTotalSpent}}</td>

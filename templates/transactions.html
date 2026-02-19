@@ -17,30 +17,30 @@
             </div>
         </div>
     </form>
-    <div style="border-top:1px solid var(--border); margin-top:1rem; padding-top:1rem; display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
-        <label style="font-size:0.9rem; color:var(--text-muted); white-space:nowrap;">Account Balance</label>
-        <form method="POST" action="/balance" style="display:flex; gap:0.4rem; align-items:center;">
+    <div class="balance-bar">
+        <label class="balance-label">Account Balance</label>
+        <form method="POST" action="/balance" class="balance-form">
             <div class="amount-input">
                 <input type="text" name="balance" placeholder="0.00"
                     value="{{if .Balance}}{{centsToDollar .Balance}}{{end}}"
-                    style="padding-left:1.5rem; width:120px; font-size:0.9rem;">
+                    class="balance-input">
             </div>
             <button type="submit" class="btn btn-small btn-secondary">Set</button>
         </form>
-        {{if .Balance}}<span style="font-size:0.85rem; color:var(--text-muted);">currently {{formatMoney .Balance}}</span>{{end}}
+        {{if .Balance}}<span class="balance-hint">currently {{formatMoney .Balance}}</span>{{end}}
     </div>
 </div>
 
 <!-- Pending Review -->
 <div class="card">
-    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; margin-bottom:1rem;">
-        <h2 style="margin:0;">Pending Review ({{len .Pending}})</h2>
+    <div class="section-header-flex">
+        <h2 class="m-0">Pending Review ({{len .Pending}})</h2>
         {{if .Pending}}
-        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-            <form method="POST" action="/transactions/confirm-all-auto" style="margin:0;">
+        <div class="action-group">
+            <form method="POST" action="/transactions/confirm-all-auto">
                 <button type="submit" class="btn btn-small">Confirm All Auto-Categorized</button>
             </form>
-            <form method="POST" action="/transactions/dismiss-all-credits" style="margin:0;">
+            <form method="POST" action="/transactions/dismiss-all-credits">
                 <button type="submit" class="btn btn-small btn-secondary">Dismiss All Credits</button>
             </form>
         </div>
@@ -62,15 +62,15 @@
         </thead>
         <tbody>
         {{range .Pending}}
-        <tr {{if .IsDuplicateFlag}}style="background:var(--warning-bg, #fff8e1);"{{end}}>
-            <td style="white-space:nowrap;">{{.ProcessedDate}}</td>
+        <tr {{if .IsDuplicateFlag}}class="tr-duplicate"{{end}}>
+            <td class="text-nowrap">{{.ProcessedDate}}</td>
             <td>
                 {{.Description}}
                 {{if .IsDuplicateFlag}}
                 <span class="badge badge-warning" title="Similar amount exists in expenditures">duplicate?</span>
                 {{end}}
             </td>
-            <td style="white-space:nowrap;">{{formatMoney .Amount}}</td>
+            <td class="text-nowrap">{{formatMoney .Amount}}</td>
             <td>
                 {{if eq .CreditOrDebit "Credit"}}
                 <span class="badge badge-credit">Credit</span>
@@ -81,27 +81,27 @@
             <td>
                 {{if eq .CreditOrDebit "Debit"}}
                 {{$txn := .}}
-                <select name="category_id" form="confirm-{{.ID}}" style="min-width:150px;">
+                <select name="category_id" form="confirm-{{.ID}}" class="select-category">
                     <option value="">-- select --</option>
                     {{range $.Categories}}
                     <option value="{{.ID}}" {{if eq .ID ($txn.AutoCatIDOrZero)}}selected{{end}}>{{.Name}}</option>
                     {{end}}
                 </select>
                 {{else}}
-                <span style="color:var(--text-muted);">—</span>
+                <span class="text-muted">—</span>
                 {{end}}
             </td>
-            <td style="white-space:nowrap;">
+            <td class="text-nowrap">
                 {{if eq .CreditOrDebit "Debit"}}
-                <form id="confirm-{{.ID}}" method="POST" action="/transactions/{{.ID}}/confirm" style="display:inline;">
+                <form id="confirm-{{.ID}}" method="POST" action="/transactions/{{.ID}}/confirm" class="form-inline">
                     <button type="submit" class="btn btn-small">Confirm</button>
                 </form>
                 {{else}}
-                <form method="POST" action="/transactions/{{.ID}}/confirm-credit" style="display:inline;">
+                <form method="POST" action="/transactions/{{.ID}}/confirm-credit" class="form-inline">
                     <button type="submit" class="btn btn-small btn-success">Confirm Income</button>
                 </form>
                 {{end}}
-                <form method="POST" action="/transactions/{{.ID}}/dismiss" style="display:inline;">
+                <form method="POST" action="/transactions/{{.ID}}/dismiss" class="form-inline">
                     <button type="submit" class="btn btn-small btn-secondary">Dismiss</button>
                 </form>
             </td>
@@ -111,20 +111,20 @@
     </table>
     </div>
     {{else}}
-    <p style="color:var(--text-muted);">No pending transactions. Import a CSV to get started.</p>
+    <p class="text-muted">No pending transactions. Import a CSV to get started.</p>
     {{end}}
 </div>
 
 <!-- Confirmed Transactions -->
 {{if or .Confirmed .SearchQuery}}
 <details class="card" {{if .SearchQuery}}open{{end}}>
-    <summary style="cursor:pointer; font-weight:600; font-size:1.05rem;">
+    <summary class="details-summary">
         Confirmed Transactions{{if .SearchQuery}} — "{{.SearchQuery}}"{{else}} ({{len .Confirmed}}){{end}}
     </summary>
-    <div style="margin-top:1rem;">
-    <form method="GET" action="/transactions" style="display:flex; gap:0.4rem; margin-bottom:1rem; align-items:center; flex-wrap:wrap;">
+    <div class="mt-4">
+    <form method="GET" action="/transactions" class="search-form">
         <input type="text" name="q" placeholder="Search description or category..."
-            value="{{.SearchQuery}}" style="flex:1; min-width:200px; max-width:400px; font-size:0.9rem;">
+            value="{{.SearchQuery}}" class="search-input">
         <button type="submit" class="btn btn-small">Search</button>
         {{if .SearchQuery}}<a href="/transactions" class="btn btn-link btn-small">Clear</a>{{end}}
     </form>
@@ -143,9 +143,9 @@
         <tbody>
         {{range .Confirmed}}
         <tr>
-            <td style="white-space:nowrap;">{{.ProcessedDate}}</td>
+            <td class="text-nowrap">{{.ProcessedDate}}</td>
             <td>{{.Description}}</td>
-            <td style="white-space:nowrap;">{{formatMoney .Amount}}</td>
+            <td class="text-nowrap">{{formatMoney .Amount}}</td>
             <td>
                 {{if eq .CreditOrDebit "Credit"}}
                 <span class="badge badge-credit">Credit</span>
@@ -160,7 +160,7 @@
     </table>
     </div>
     {{else if .SearchQuery}}
-    <p style="color:var(--text-muted);">No transactions found matching "{{.SearchQuery}}".</p>
+    <p class="text-muted">No transactions found matching "{{.SearchQuery}}".</p>
     {{end}}
     </div>
 </details>
@@ -168,10 +168,10 @@
 
 <!-- Rules -->
 <details class="card">
-    <summary style="cursor:pointer; font-weight:600; font-size:1.05rem;">
+    <summary class="details-summary">
         Categorization Rules ({{len .Rules}})
     </summary>
-    <div style="margin-top:1rem;">
+    <div class="mt-4">
     {{if .Rules}}
     <div class="table-wrapper">
     <table>
@@ -187,8 +187,8 @@
         <tr>
             <td><code>{{.Keyword}}</code></td>
             <td>
-                <form method="POST" action="/transactions/rules/{{.ID}}/update" style="display:flex; gap:0.4rem; align-items:center;">
-                    <select name="category_id" style="min-width:150px;">
+                <form method="POST" action="/transactions/rules/{{.ID}}/update" class="rule-form">
+                    <select name="category_id" class="select-category">
                         {{$rule := .}}
                         {{range $.Categories}}
                         <option value="{{.ID}}" {{if eq .ID $rule.CategoryID}}selected{{end}}>{{.Name}}</option>
@@ -198,7 +198,7 @@
                 </form>
             </td>
             <td>
-                <form method="POST" action="/transactions/rules/delete" style="display:inline;">
+                <form method="POST" action="/transactions/rules/delete" class="form-inline">
                     <input type="hidden" name="rule_id" value="{{.ID}}">
                     <button type="submit" class="btn btn-small btn-danger">Delete</button>
                 </form>
@@ -209,7 +209,7 @@
     </table>
     </div>
     {{else}}
-    <p style="color:var(--text-muted);">No rules yet. Rules are learned automatically when you confirm transactions with a changed category.</p>
+    <p class="text-muted">No rules yet. Rules are learned automatically when you confirm transactions with a changed category.</p>
     {{end}}
     </div>
 </details>

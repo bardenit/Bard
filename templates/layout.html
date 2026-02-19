@@ -14,18 +14,18 @@
     <link rel="apple-touch-icon" href="/static/icon-180.png">
 </head>
 <body>
-    <div id="pwa-install-banner" style="display:none; align-items:center; justify-content:space-between; gap:1rem; padding:0.6rem 1.5rem; background:#1e1b4b; color:#fff; font-size:0.9rem; flex-wrap:wrap;">
+    <div id="pwa-install-banner" class="pwa-banner">
         <span>&#128640; Install <strong>Budget</strong> as an app for quick access from your desktop.</span>
-        <div style="display:flex; gap:0.5rem; align-items:center;">
-            <button id="pwa-install-btn" style="background:#0d6efd; color:#fff; border:none; padding:0.35rem 0.9rem; border-radius:4px; cursor:pointer; font-size:0.85rem;">Install</button>
-            <button id="pwa-dismiss-btn" style="background:transparent; color:#aaa; border:none; font-size:1.1rem; cursor:pointer; line-height:1;" title="Dismiss">&times;</button>
+        <div class="pwa-banner-actions">
+            <button id="pwa-install-btn" class="pwa-install-btn">Install</button>
+            <button id="pwa-dismiss-btn" class="pwa-dismiss-btn" title="Dismiss">&times;</button>
         </div>
     </div>
     <nav class="nav">
         <div class="nav-inner">
             <div class="nav-brand">
-                Budget <span style="font-size: 0.6em; color: var(--text-muted); font-weight: normal;">v{{.Version}}</span>
-                {{if .LatestVersion}}<a href="https://github.com/bardenit/Bard" target="_blank" rel="noopener" style="font-size: 0.6em; font-weight: normal; color: #856404; text-decoration: none; margin-left: 0.25em;">&#x2192; {{.LatestVersion}}</a>{{end}}
+                Budget <span class="nav-version">v{{.Version}}</span>
+                {{if .LatestVersion}}<a href="https://github.com/bardenit/Bard" target="_blank" rel="noopener" class="nav-update-link">&#x2192; {{.LatestVersion}}</a>{{end}}
             </div>
             <div class="nav-links">
                 <a href="/" {{if eq .ActiveNav "dashboard"}}class="active"{{end}}>Dashboard</a>
@@ -44,7 +44,7 @@
                 </div>
             </div>
             {{if .AuthEnabled}}
-            <a href="/logout" class="btn btn-sm btn-secondary" style="margin-left:0.5rem;">Logout</a>
+            <a href="/logout" class="btn btn-sm btn-secondary nav-logout">Logout</a>
             {{end}}
         </div>
     </nav>

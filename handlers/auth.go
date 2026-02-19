@@ -34,6 +34,8 @@ var authConfig struct {
 	passwordHash       []byte
 	mustChangePassword bool
 	oidcEnabled        bool
+	oidcIssuer         string // active issuer (env or DB) — for settings page display
+	oidcClientID       string // active client ID (env or DB) — for settings page display
 	oauth2Config       oauth2.Config
 	oidcVerifier       *oidcpkg.IDTokenVerifier
 	sessionSecret      []byte
@@ -166,6 +168,10 @@ func reloadAuthCore() error {
 	}
 
 	// Configure OIDC.
+	// Always store the active OIDC identifiers for the settings page (even if init fails).
+	authConfig.oidcIssuer = issuer
+	authConfig.oidcClientID = clientID
+
 	if oidcEnabled && issuer != "" && clientID != "" && clientSecret != "" && redirectURL != "" {
 		authConfig.redirectURL = redirectURL
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
