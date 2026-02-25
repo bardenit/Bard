@@ -28,6 +28,14 @@ func BillsRouter(w http.ResponseWriter, r *http.Request) {
 		BillUpdateHandler(w, r)
 	case strings.HasSuffix(path, "/delete"):
 		BillDeleteHandler(w, r)
+	case strings.HasSuffix(path, "/pay"):
+		if r.Method == http.MethodGet {
+			BillPayFormHandler(w, r)
+		} else if r.Method == http.MethodPost {
+			BillPayHandler(w, r)
+		} else {
+			http.NotFound(w, r)
+		}
 	default:
 		http.NotFound(w, r)
 	}
@@ -167,6 +175,83 @@ func BillDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/bills", http.StatusSeeOther)
+}
+
+// BillPayFormHandler shows the form to record an actual payment for a bill occurrence.
+func BillPayFormHandler(w http.ResponseWriter, r *http.Request) {
+	idStr := strings.TrimPrefix(r.URL.Path, "/bills/")
+	idStr = strings.TrimSuffix(idStr, "/pay")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	bill, err := models.GetBill(id)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	occurrenceDate := r.URL.Query().Get("date")
+	returnMonth := r.URL.Query().Get("return")
+	if returnMonth == "" && occurrenceDate != "" && len(occurrenceDate) >= 7 {
+		returnMonth = occurrenceDate[:7]
+	}
+
+	// Load existing payment if any
+	existing, hasPrior, _ := models.GetBillPayment(id, occurrenceDate)
+
+	data := PageData{
+		Title:     "Record Payment — " + bill.Name,
+		ActiveNav: "bills",
+		Flash:     GetFlash(w, r),
+	}
+	data.Extra = map[string]interface{}{
+		"Bill":           bill,
+		"OccurrenceDate": occurrenceDate,
+		"ReturnMonth":    returnMonth,
+		"HasPrior":       hasPrior,
+		"PriorPayment":   existing,
+	}
+	RenderTemplate(w, "bill_pay.html", data)
+}
+
+// BillPayHandler records an actual payment for a bill occurrence.
+func BillPayHandler(w http.ResponseWriter, r *http.Request) {
+	idStr := strings.TrimPrefix(r.URL.Path, "/bills/")
+	idStr = strings.TrimSuffix(idStr, "/pay")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	occurrenceDate := r.FormValue("occurrence_date")
+	returnMonth := r.FormValue("return_month")
+	amountStr := r.FormValue("amount_paid")
+	notes := strings.TrimSpace(r.FormValue("notes"))
+
+	amountPaid, err := parseCents(amountStr)
+	if err != nil || occurrenceDate == "" {
+		SetFlash(w, "Please enter a valid amount.")
+		redirectTo := "/bills/" + strconv.Itoa(id) + "/pay?date=" + occurrenceDate + "&return=" + returnMonth
+		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+		return
+	}
+
+	if err := models.RecordBillPayment(id, occurrenceDate, amountPaid, notes); err != nil {
+		log.Printf("Error recording bill payment: %v", err)
+		SetFlash(w, "Failed to record payment.")
+	} else {
+		SetFlash(w, "Payment recorded.")
+	}
+
+	if returnMonth != "" {
+		http.Redirect(w, r, "/calendar?month="+returnMonth, http.StatusSeeOther)
+	} else {
+		http.Redirect(w, r, "/calendar", http.StatusSeeOther)
+	}
 }
 
 // parseCents converts a dollar string like "45.99" to cents (4599)

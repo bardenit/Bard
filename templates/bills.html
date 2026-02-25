@@ -25,6 +25,8 @@
                     <option value="weekly" {{if eq .Bill.Recurrence "weekly"}}selected{{end}}>Weekly</option>
                     <option value="biweekly" {{if eq .Bill.Recurrence "biweekly"}}selected{{end}}>Biweekly</option>
                     <option value="monthly" {{if eq .Bill.Recurrence "monthly"}}selected{{end}}>Monthly</option>
+                    <option value="quarterly" {{if eq .Bill.Recurrence "quarterly"}}selected{{end}}>Quarterly</option>
+                    <option value="semiannual" {{if eq .Bill.Recurrence "semiannual"}}selected{{end}}>Semi-Annual</option>
                     <option value="yearly" {{if eq .Bill.Recurrence "yearly"}}selected{{end}}>Yearly</option>
                 </select>
             </div>
@@ -62,6 +64,8 @@
                     <option value="weekly">Weekly</option>
                     <option value="biweekly">Biweekly</option>
                     <option value="monthly" selected>Monthly</option>
+                    <option value="quarterly">Quarterly</option>
+                    <option value="semiannual">Semi-Annual</option>
                     <option value="yearly">Yearly</option>
                 </select>
             </div>

@@ -1,14 +1,30 @@
 package models
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // Occurrence represents a bill or income event on a specific date
 type Occurrence struct {
-	Name      string
-	Amount    int
-	Date      time.Time
-	Type      string // "bill" or "income"
-	IsPrimary bool   // true for the designated primary income source
+	Name        string
+	Amount      int
+	Date        time.Time
+	Type        string // "bill" or "income"
+	IsPrimary   bool   // true for the designated primary income source
+	BillID      int    // set for bill occurrences; 0 for income
+	IsPaid      bool   // true if a payment has been recorded for this occurrence
+	ActualPaid  int    // actual amount paid (cents); 0 if not recorded
+}
+
+// DateStr returns the date formatted as YYYY-MM-DD for use in URLs and keys.
+func (o Occurrence) DateStr() string {
+	return o.Date.Format("2006-01-02")
+}
+
+// MonthStr returns the year-month formatted as YYYY-MM.
+func (o Occurrence) MonthStr() string {
+	return o.Date.Format("2006-01")
 }
 
 // CalendarDay represents a single day in the calendar view
@@ -37,7 +53,13 @@ func ExpandOccurrences(anchorDate time.Time, recurrence string, start, end time.
 		dates = expandByDays(anchorDate, 14, start, end)
 
 	case "monthly":
-		dates = expandMonthly(anchorDate, start, end)
+		dates = expandNMonthly(anchorDate, 1, start, end)
+
+	case "quarterly":
+		dates = expandNMonthly(anchorDate, 3, start, end)
+
+	case "semiannual":
+		dates = expandNMonthly(anchorDate, 6, start, end)
 
 	case "yearly":
 		dates = expandYearly(anchorDate, start, end)
@@ -74,22 +96,30 @@ func expandByDays(anchor time.Time, interval int, start, end time.Time) []time.T
 	return dates
 }
 
-func expandMonthly(anchor time.Time, start, end time.Time) []time.Time {
+// expandNMonthly generates dates every N months anchored to the given date.
+// Pass n=1 for monthly, n=3 for quarterly, n=6 for semiannual.
+func expandNMonthly(anchor time.Time, n int, start, end time.Time) []time.Time {
 	var dates []time.Time
 	day := anchor.Day()
 
-	// Start from the anchor's month or earlier if needed
+	// Begin at anchor's month
 	current := time.Date(anchor.Year(), anchor.Month(), 1, 0, 0, 0, 0, time.Local)
+	startMonth := time.Date(start.Year(), start.Month(), 1, 0, 0, 0, 0, time.Local)
 
-	// Jump to start month if anchor is before start
-	if current.Before(time.Date(start.Year(), start.Month(), 1, 0, 0, 0, 0, time.Local)) {
-		current = time.Date(start.Year(), start.Month(), 1, 0, 0, 0, 0, time.Local)
+	// Advance to the first interval >= startMonth
+	if current.Before(startMonth) {
+		monthsBehind := int(startMonth.Year()-current.Year())*12 + int(startMonth.Month()-current.Month())
+		jumps := monthsBehind / n
+		current = current.AddDate(0, jumps*n, 0)
+		if current.Before(startMonth) {
+			current = current.AddDate(0, n, 0)
+		}
 	}
 
 	endMonth := time.Date(end.Year(), end.Month()+1, 0, 0, 0, 0, 0, time.Local)
 
 	for !current.After(endMonth) {
-		// Clamp day to last day of month
+		// Clamp day to last day of the current month
 		lastDay := time.Date(current.Year(), current.Month()+1, 0, 0, 0, 0, 0, time.Local).Day()
 		d := day
 		if d > lastDay {
@@ -101,7 +131,7 @@ func expandMonthly(anchor time.Time, start, end time.Time) []time.Time {
 			dates = append(dates, date)
 		}
 
-		current = current.AddDate(0, 1, 0)
+		current = current.AddDate(0, n, 0)
 	}
 
 	return dates
@@ -325,6 +355,9 @@ func BuildCalendarMonth(year int, month time.Month) ([]CalendarDay, error) {
 	// Map date -> occurrences
 	dayMap := make(map[string][]Occurrence)
 
+	// Load all payments in the visible date range for payment status lookup
+	payments, _ := GetBillPaymentsInRange(gridStart.Format("2006-01-02"), gridEnd.Format("2006-01-02"))
+
 	for _, bill := range bills {
 		anchor, err := time.Parse("2006-01-02", bill.DueDate)
 		if err != nil {
@@ -332,13 +365,21 @@ func BuildCalendarMonth(year int, month time.Month) ([]CalendarDay, error) {
 		}
 		for _, d := range ExpandOccurrences(anchor, bill.Recurrence, gridStart, gridEnd) {
 			adj := adjustWeekend(d)
-			key := adj.Format("2006-01-02")
-			dayMap[key] = append(dayMap[key], Occurrence{
+			adjStr := adj.Format("2006-01-02")
+			key := adjStr
+			payKey := fmt.Sprintf("%d-%s", bill.ID, adjStr)
+			occ := Occurrence{
 				Name:   bill.Name,
 				Amount: bill.Amount,
 				Date:   adj,
 				Type:   "bill",
-			})
+				BillID: bill.ID,
+			}
+			if p, ok := payments[payKey]; ok {
+				occ.IsPaid = true
+				occ.ActualPaid = p.AmountPaid
+			}
+			dayMap[key] = append(dayMap[key], occ)
 		}
 	}
 

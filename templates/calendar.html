@@ -18,9 +18,15 @@
     <div class="calendar-day{{if .IsToday}} today{{end}}{{if .OtherMonth}} other-month{{end}}">
         <div class="day-number">{{.Date.Day}}</div>
         {{range .Entries}}
-        <div class="calendar-entry {{.Type}}">
-            {{if eq .Type "income"}}+{{else}}-{{end}}{{formatMoney .Amount}} {{.Name}}
+        {{if eq .Type "bill"}}
+        <a href="/bills/{{.BillID}}/pay?date={{.DateStr}}&return={{.MonthStr}}" class="calendar-entry bill{{if .IsPaid}} paid{{end}}" title="Click to record payment">
+            -{{formatMoney .Amount}} {{.Name}}{{if .IsPaid}} ✓{{end}}
+        </a>
+        {{else}}
+        <div class="calendar-entry income">
+            +{{formatMoney .Amount}} {{.Name}}
         </div>
+        {{end}}
         {{end}}
         {{if .Entries}}
         <div class="net {{if ge .NetImpact 0}}positive{{else}}negative{{end}}">

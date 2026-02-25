@@ -1,0 +1,51 @@
+{{define "content"}}
+<div class="pay-wrap">
+    <div class="pay-header">
+        <h1>Record Payment</h1>
+        <p class="pay-subtitle">{{.Bill.Name}}</p>
+    </div>
+
+    <div class="card pay-card">
+        <div class="pay-meta">
+            <div class="pay-meta-item">
+                <span class="pay-meta-label">Scheduled Amount</span>
+                <span class="pay-meta-value">{{formatMoney .Bill.Amount}}</span>
+            </div>
+            <div class="pay-meta-item">
+                <span class="pay-meta-label">Due Date</span>
+                <span class="pay-meta-value">{{.OccurrenceDate}}</span>
+            </div>
+        </div>
+
+        {{if .HasPrior}}
+        <div class="alert-warning mb-4">
+            Previously recorded: <strong>{{formatMoney .PriorPayment.AmountPaid}}</strong>
+            {{if .PriorPayment.Notes}} — {{.PriorPayment.Notes}}{{end}}
+        </div>
+        {{end}}
+
+        <form method="POST" action="/bills/{{.Bill.ID}}/pay">
+            <input type="hidden" name="occurrence_date" value="{{.OccurrenceDate}}">
+            <input type="hidden" name="return_month" value="{{.ReturnMonth}}">
+
+            <div class="form-group">
+                <label for="amount_paid">Amount Paid ($)</label>
+                <input type="number" id="amount_paid" name="amount_paid" step="0.01" min="0"
+                    value="{{if .HasPrior}}{{centsToDollar .PriorPayment.AmountPaid}}{{else}}{{centsToDollar .Bill.Amount}}{{end}}"
+                    required autofocus>
+            </div>
+
+            <div class="form-group">
+                <label for="notes">Notes <span class="text-muted">(optional)</span></label>
+                <input type="text" id="notes" name="notes" placeholder="e.g., paid early, partial payment"
+                    value="{{if .HasPrior}}{{.PriorPayment.Notes}}{{end}}">
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">{{if .HasPrior}}Update Payment{{else}}Record Payment{{end}}</button>
+                <a href="/calendar?month={{.ReturnMonth}}" class="btn btn-link">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{{end}}

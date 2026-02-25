@@ -8,9 +8,10 @@
         <div class="label mt-2">before next check on {{.NextPaycheckDate}}</div>
     </div>
     <div class="summary-card">
-        <div class="label">Balance until next check</div>
+        <div class="label">Estimated Balance</div>
         {{if .HasBalance}}
         <div class="value {{if ge .Balance 0}}positive{{else}}negative{{end}}">{{formatMoney .Balance}}</div>
+        <div class="label mt-2">projected since {{.BalanceAsOf}}</div>
         {{else}}
         <div class="value value-muted">Not set</div>
         {{end}}

@@ -83,6 +83,16 @@ var migrations = []string{
 	)`,
 	// Add is_primary to income (idempotent — "duplicate column name" is tolerated)
 	`ALTER TABLE income ADD COLUMN is_primary INTEGER NOT NULL DEFAULT 0`,
+	// Bill payments — tracks actual amounts paid for each bill occurrence
+	`CREATE TABLE IF NOT EXISTS bill_payments (
+		id              INTEGER PRIMARY KEY AUTOINCREMENT,
+		bill_id         INTEGER NOT NULL REFERENCES bills(id) ON DELETE CASCADE,
+		occurrence_date TEXT    NOT NULL,
+		amount_paid     INTEGER NOT NULL,
+		notes           TEXT    NOT NULL DEFAULT '',
+		created_at      TEXT    NOT NULL DEFAULT (datetime('now')),
+		UNIQUE(bill_id, occurrence_date)
+	)`,
 }
 
 func RunMigrations() {

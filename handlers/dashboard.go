@@ -96,10 +96,10 @@ func DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Error calculating total budgeted: %v", err)
 	}
 
-	// Balance from manually entered account balance.
-	balance, hasBalance, err := models.GetManualBalance()
+	// Balance — projected from the manually entered amount, adjusted for elapsed bills/income.
+	balance, hasBalance, balanceAsOf, err := models.GetProjectedBalance()
 	if err != nil {
-		log.Printf("Error getting manual balance: %v", err)
+		log.Printf("Error getting projected balance: %v", err)
 	}
 	unallocated := balance - totalBudgeted
 
@@ -174,6 +174,7 @@ func DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		"NextPaycheckDate":      nextPaycheck.Format("Jan 2"),
 		"Balance":               balance,
 		"HasBalance":            hasBalance,
+		"BalanceAsOf":           balanceAsOf,
 		"TotalBudgeted":         totalBudgeted,
 		"Unallocated":           unallocated,
 		"BillsBefore":           billsBefore,
