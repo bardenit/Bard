@@ -1195,7 +1195,7 @@ h2 {
     h1 { font-size: 1.6rem; }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 960px) {
     .calendar-grid   { display: none; }
     .calendar-agenda { display: block; }
 }
