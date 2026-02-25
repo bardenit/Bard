@@ -613,6 +613,136 @@ h2 {
 .calendar-day .net.negative { color: var(--coral); }
 .calendar-footer { text-align: center; margin-top: 1rem; }
 
+/* ── Calendar agenda view (mobile) ───────────────────────────── */
+.calendar-agenda {
+    display: none;
+}
+
+.agenda-day {
+    display: flex;
+    gap: 1rem;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.agenda-day:last-child { border-bottom: none; }
+
+.agenda-date {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-width: 2.8rem;
+    padding-top: 0.1rem;
+}
+
+.agenda-weekday {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.agenda-daynum {
+    font-size: 1.5rem;
+    font-family: var(--font-serif);
+    font-weight: 600;
+    line-height: 1.1;
+    color: var(--slate);
+}
+
+.agenda-daynum.today {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.1rem;
+    height: 2.1rem;
+    background: var(--ocean);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 1rem;
+}
+
+.agenda-month {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+}
+
+.agenda-entries {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.agenda-entry {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.85rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: opacity 0.15s, transform 0.1s;
+}
+
+.agenda-entry:active { transform: scale(0.98); }
+
+.agenda-entry.bill {
+    background: rgba(194, 82, 82, 0.10);
+    color: var(--coral);
+    border: 1px solid rgba(194, 82, 82, 0.18);
+}
+
+.agenda-entry.bill.paid {
+    background: rgba(43, 174, 130, 0.08);
+    color: var(--teal-hover);
+    border-color: rgba(43, 174, 130, 0.18);
+    opacity: 0.8;
+}
+
+.agenda-entry.bill.paid .agenda-entry-name { text-decoration: line-through; }
+
+.agenda-entry.income {
+    background: rgba(43, 174, 130, 0.10);
+    color: var(--teal-hover);
+    border: 1px solid rgba(43, 174, 130, 0.18);
+}
+
+.agenda-entry.income.recorded {
+    opacity: 0.75;
+}
+
+.agenda-entry.income.recorded .agenda-entry-name { text-decoration: line-through; }
+
+.agenda-entry-name { flex: 1; }
+
+.agenda-entry-amount {
+    font-weight: 700;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.agenda-entry-check {
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.agenda-net {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-align: right;
+    padding: 0.1rem 0.25rem;
+    letter-spacing: 0.02em;
+}
+
+.agenda-net.positive { color: var(--seafoam); }
+.agenda-net.negative { color: var(--coral); }
+
 /* ── Bill Pay form ─────────────────────────────────────────────── */
 .pay-wrap {
     max-width: 480px;
@@ -1063,6 +1193,11 @@ h2 {
     .calendar-day  { min-height: 70px; padding: 0.2rem; }
     .calendar-entry { font-size: 0.6rem; }
     h1 { font-size: 1.6rem; }
+}
+
+@media (max-width: 640px) {
+    .calendar-grid   { display: none; }
+    .calendar-agenda { display: block; }
 }
 
 @media (max-width: 480px) {

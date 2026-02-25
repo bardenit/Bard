@@ -37,6 +37,41 @@
     {{end}}
 </div>
 
+<!-- Agenda view: shown on mobile, hidden on desktop -->
+<div class="calendar-agenda">
+    {{range .Days}}
+    {{if and .Entries (not .OtherMonth)}}
+    <div class="agenda-day{{if .IsToday}} today{{end}}">
+        <div class="agenda-date">
+            <span class="agenda-weekday">{{.Date.Format "Mon"}}</span>
+            <span class="agenda-daynum{{if .IsToday}} today{{end}}">{{.Date.Day}}</span>
+            <span class="agenda-month">{{.Date.Format "Jan"}}</span>
+        </div>
+        <div class="agenda-entries">
+            {{range .Entries}}
+            {{if eq .Type "bill"}}
+            <a href="/bills/{{.BillID}}/pay?date={{.DateStr}}&return={{.MonthStr}}" class="agenda-entry bill{{if .HasActual}} paid{{end}}">
+                <span class="agenda-entry-name">{{.Name}}</span>
+                <span class="agenda-entry-amount">-{{formatMoney .Amount}}</span>
+                {{if .HasActual}}<span class="agenda-entry-check">&#10003;</span>{{end}}
+            </a>
+            {{else}}
+            <a href="/income/{{.IncomeID}}/record?date={{.DateStr}}&return={{.MonthStr}}" class="agenda-entry income{{if .HasActual}} recorded{{end}}">
+                <span class="agenda-entry-name">{{.Name}}</span>
+                <span class="agenda-entry-amount">+{{formatMoney .Amount}}</span>
+                {{if .HasActual}}<span class="agenda-entry-check">&#10003;</span>{{end}}
+            </a>
+            {{end}}
+            {{end}}
+            <div class="agenda-net {{if ge .NetImpact 0}}positive{{else}}negative{{end}}">
+                Net: {{if ge .NetImpact 0}}+{{end}}{{formatMoney .NetImpact}}
+            </div>
+        </div>
+    </div>
+    {{end}}
+    {{end}}
+</div>
+
 <div class="calendar-footer">
     <a href="/calendar?month={{.TodayMonth}}" class="btn btn-link">Today</a>
 </div>
