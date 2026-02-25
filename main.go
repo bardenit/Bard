@@ -1,9 +1,11 @@
 package main
 
 import (
+	_ "embed"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/bardenit/Bard/db"
 	"github.com/bardenit/Bard/handlers"
@@ -12,7 +14,12 @@ import (
 // BuildTime is injected at build time via -ldflags "-X main.BuildTime=<RFC3339 timestamp>".
 var BuildTime = "unknown"
 
+//go:embed VERSION
+var versionFile string
+
 func main() {
+	handlers.AppVersion = strings.TrimSpace(versionFile)
+
 	db.Init()
 	defer db.DB.Close()
 

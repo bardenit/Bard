@@ -9,8 +9,9 @@ import (
 	"time"
 )
 
-// AppVersion is the current application version, displayed in the nav.
-const AppVersion = "3.1"
+// AppVersion is set at startup from the embedded VERSION file in main.go.
+// Do not edit this manually — update the VERSION file instead.
+var AppVersion = "dev"
 
 // latestVersion holds the newest version string fetched from GitHub.
 // Empty means no upgrade is available (or check hasn't run yet).
