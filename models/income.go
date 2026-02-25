@@ -106,6 +106,62 @@ func DeleteIncome(id int) error {
 	return err
 }
 
+// IncomeActual records the actual amount received for a specific income occurrence.
+type IncomeActual struct {
+	ID             int
+	IncomeID       int
+	OccurrenceDate string
+	AmountActual   int
+	Notes          string
+	CreatedAt      string
+}
+
+// RecordIncomeActual upserts an actual amount for a given income occurrence date.
+func RecordIncomeActual(incomeID int, occurrenceDate string, amountActual int, notes string) error {
+	_, err := db.DB.Exec(`
+		INSERT INTO income_actuals (income_id, occurrence_date, amount_actual, notes)
+		VALUES (?, ?, ?, ?)
+		ON CONFLICT(income_id, occurrence_date) DO UPDATE SET amount_actual = excluded.amount_actual, notes = excluded.notes
+	`, incomeID, occurrenceDate, amountActual, notes)
+	return err
+}
+
+// GetIncomeActual retrieves the recorded actual for a specific income and occurrence date.
+func GetIncomeActual(incomeID int, occurrenceDate string) (IncomeActual, bool, error) {
+	var a IncomeActual
+	err := db.DB.QueryRow(`
+		SELECT id, income_id, occurrence_date, amount_actual, notes, created_at
+		FROM income_actuals WHERE income_id = ? AND occurrence_date = ?
+	`, incomeID, occurrenceDate).Scan(&a.ID, &a.IncomeID, &a.OccurrenceDate, &a.AmountActual, &a.Notes, &a.CreatedAt)
+	if err == sql.ErrNoRows {
+		return a, false, nil
+	}
+	return a, true, err
+}
+
+// GetIncomeActualsInRange loads all actuals within a date range as a map keyed by "incomeID-date".
+func GetIncomeActualsInRange(start, end string) (map[string]IncomeActual, error) {
+	rows, err := db.DB.Query(`
+		SELECT id, income_id, occurrence_date, amount_actual, notes, created_at
+		FROM income_actuals WHERE occurrence_date >= ? AND occurrence_date <= ?
+	`, start, end)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	actuals := make(map[string]IncomeActual)
+	for rows.Next() {
+		var a IncomeActual
+		if err := rows.Scan(&a.ID, &a.IncomeID, &a.OccurrenceDate, &a.AmountActual, &a.Notes, &a.CreatedAt); err != nil {
+			return nil, err
+		}
+		key := fmt.Sprintf("%d-%s", a.IncomeID, a.OccurrenceDate)
+		actuals[key] = a
+	}
+	return actuals, rows.Err()
+}
+
 // SetPrimaryIncome marks a single income item as the primary paycheck source.
 // All other income items have is_primary cleared in the same transaction.
 func SetPrimaryIncome(id int) error {

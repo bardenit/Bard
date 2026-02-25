@@ -93,6 +93,16 @@ var migrations = []string{
 		created_at      TEXT    NOT NULL DEFAULT (datetime('now')),
 		UNIQUE(bill_id, occurrence_date)
 	)`,
+	// Income actuals — tracks actual amounts received for each income occurrence
+	`CREATE TABLE IF NOT EXISTS income_actuals (
+		id              INTEGER PRIMARY KEY AUTOINCREMENT,
+		income_id       INTEGER NOT NULL REFERENCES income(id) ON DELETE CASCADE,
+		occurrence_date TEXT    NOT NULL,
+		amount_actual   INTEGER NOT NULL,
+		notes           TEXT    NOT NULL DEFAULT '',
+		created_at      TEXT    NOT NULL DEFAULT (datetime('now')),
+		UNIQUE(income_id, occurrence_date)
+	)`,
 }
 
 func RunMigrations() {

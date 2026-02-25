@@ -1,0 +1,51 @@
+{{define "content"}}
+<div class="pay-wrap">
+    <div class="pay-header">
+        <h1>Record Income</h1>
+        <p class="pay-subtitle">{{.Income.Name}}</p>
+    </div>
+
+    <div class="card pay-card">
+        <div class="pay-meta">
+            <div class="pay-meta-item">
+                <span class="pay-meta-label">Expected Amount</span>
+                <span class="pay-meta-value">{{formatMoney .Income.Amount}}</span>
+            </div>
+            <div class="pay-meta-item">
+                <span class="pay-meta-label">Deposit Date</span>
+                <span class="pay-meta-value">{{.OccurrenceDate}}</span>
+            </div>
+        </div>
+
+        {{if .HasActual}}
+        <div class="alert-warning mb-4">
+            Previously recorded: <strong>{{formatMoney .PriorActual.AmountActual}}</strong>
+            {{if .PriorActual.Notes}} — {{.PriorActual.Notes}}{{end}}
+        </div>
+        {{end}}
+
+        <form method="POST" action="/income/{{.Income.ID}}/record">
+            <input type="hidden" name="occurrence_date" value="{{.OccurrenceDate}}">
+            <input type="hidden" name="return_month" value="{{.ReturnMonth}}">
+
+            <div class="form-group">
+                <label for="amount_actual">Amount Received ($)</label>
+                <input type="number" id="amount_actual" name="amount_actual" step="0.01" min="0"
+                    value="{{if .HasActual}}{{centsToDollar .PriorActual.AmountActual}}{{else}}{{centsToDollar .Income.Amount}}{{end}}"
+                    required autofocus>
+            </div>
+
+            <div class="form-group">
+                <label for="notes">Notes <span class="text-muted">(optional)</span></label>
+                <input type="text" id="notes" name="notes" placeholder="e.g., bonus included, short week"
+                    value="{{if .HasActual}}{{.PriorActual.Notes}}{{end}}">
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">{{if .HasActual}}Update{{else}}Record Income{{end}}</button>
+                <a href="/calendar?month={{.ReturnMonth}}" class="btn btn-link">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{{end}}

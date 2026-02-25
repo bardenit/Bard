@@ -200,7 +200,7 @@ func BillPayFormHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Load existing payment if any
-	existing, hasPrior, _ := models.GetBillPayment(id, occurrenceDate)
+	existing, hasActual, _ := models.GetBillPayment(id, occurrenceDate)
 
 	data := PageData{
 		Title:     "Record Payment — " + bill.Name,
@@ -211,7 +211,7 @@ func BillPayFormHandler(w http.ResponseWriter, r *http.Request) {
 		"Bill":           bill,
 		"OccurrenceDate": occurrenceDate,
 		"ReturnMonth":    returnMonth,
-		"HasPrior":       hasPrior,
+		"HasActual":      hasActual,
 		"PriorPayment":   existing,
 	}
 	RenderTemplate(w, "bill_pay.html", data)

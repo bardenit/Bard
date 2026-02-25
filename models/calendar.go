@@ -7,14 +7,15 @@ import (
 
 // Occurrence represents a bill or income event on a specific date
 type Occurrence struct {
-	Name        string
-	Amount      int
-	Date        time.Time
-	Type        string // "bill" or "income"
-	IsPrimary   bool   // true for the designated primary income source
-	BillID      int    // set for bill occurrences; 0 for income
-	IsPaid      bool   // true if a payment has been recorded for this occurrence
-	ActualPaid  int    // actual amount paid (cents); 0 if not recorded
+	Name         string
+	Amount       int
+	Date         time.Time
+	Type         string // "bill" or "income"
+	IsPrimary    bool   // true for the designated primary income source
+	BillID       int    // set for bill occurrences; 0 for income
+	IncomeID     int    // set for income occurrences; 0 for bills
+	HasActual    bool   // true if an actual amount has been recorded
+	ActualAmount int    // actual amount (cents); 0 if not recorded
 }
 
 // DateStr returns the date formatted as YYYY-MM-DD for use in URLs and keys.
@@ -355,8 +356,11 @@ func BuildCalendarMonth(year int, month time.Month) ([]CalendarDay, error) {
 	// Map date -> occurrences
 	dayMap := make(map[string][]Occurrence)
 
-	// Load all payments in the visible date range for payment status lookup
-	payments, _ := GetBillPaymentsInRange(gridStart.Format("2006-01-02"), gridEnd.Format("2006-01-02"))
+	// Load bill payments and income actuals for the visible range
+	rangeStart := gridStart.Format("2006-01-02")
+	rangeEnd := gridEnd.Format("2006-01-02")
+	payments, _ := GetBillPaymentsInRange(rangeStart, rangeEnd)
+	actuals, _ := GetIncomeActualsInRange(rangeStart, rangeEnd)
 
 	for _, bill := range bills {
 		anchor, err := time.Parse("2006-01-02", bill.DueDate)
@@ -366,8 +370,6 @@ func BuildCalendarMonth(year int, month time.Month) ([]CalendarDay, error) {
 		for _, d := range ExpandOccurrences(anchor, bill.Recurrence, gridStart, gridEnd) {
 			adj := adjustWeekend(d)
 			adjStr := adj.Format("2006-01-02")
-			key := adjStr
-			payKey := fmt.Sprintf("%d-%s", bill.ID, adjStr)
 			occ := Occurrence{
 				Name:   bill.Name,
 				Amount: bill.Amount,
@@ -375,11 +377,11 @@ func BuildCalendarMonth(year int, month time.Month) ([]CalendarDay, error) {
 				Type:   "bill",
 				BillID: bill.ID,
 			}
-			if p, ok := payments[payKey]; ok {
-				occ.IsPaid = true
-				occ.ActualPaid = p.AmountPaid
+			if p, ok := payments[fmt.Sprintf("%d-%s", bill.ID, adjStr)]; ok {
+				occ.HasActual = true
+				occ.ActualAmount = p.AmountPaid
 			}
-			dayMap[key] = append(dayMap[key], occ)
+			dayMap[adjStr] = append(dayMap[adjStr], occ)
 		}
 	}
 
@@ -389,13 +391,20 @@ func BuildCalendarMonth(year int, month time.Month) ([]CalendarDay, error) {
 			continue
 		}
 		for _, d := range ExpandOccurrences(anchor, item.Recurrence, gridStart, gridEnd) {
-			key := d.Format("2006-01-02")
-			dayMap[key] = append(dayMap[key], Occurrence{
-				Name:   item.Name,
-				Amount: item.Amount,
-				Date:   d,
-				Type:   "income",
-			})
+			dateStr := d.Format("2006-01-02")
+			occ := Occurrence{
+				Name:      item.Name,
+				Amount:    item.Amount,
+				Date:      d,
+				Type:      "income",
+				IsPrimary: item.IsPrimary,
+				IncomeID:  item.ID,
+			}
+			if a, ok := actuals[fmt.Sprintf("%d-%s", item.ID, dateStr)]; ok {
+				occ.HasActual = true
+				occ.ActualAmount = a.AmountActual
+			}
+			dayMap[dateStr] = append(dayMap[dateStr], occ)
 		}
 	}
 

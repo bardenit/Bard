@@ -587,6 +587,18 @@ h2 {
     background: rgba(43, 174, 130, 0.10);
     color: var(--teal-hover);
     border: 1px solid rgba(43, 174, 130, 0.18);
+    cursor: pointer;
+}
+
+.calendar-entry.income:hover {
+    background: rgba(43, 174, 130, 0.20);
+    transform: translateY(-1px);
+    box-shadow: 0 1px 4px rgba(43, 174, 130, 0.20);
+}
+
+.calendar-entry.income.recorded {
+    opacity: 0.75;
+    text-decoration: line-through;
 }
 
 .calendar-day .net {

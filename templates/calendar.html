@@ -19,13 +19,13 @@
         <div class="day-number">{{.Date.Day}}</div>
         {{range .Entries}}
         {{if eq .Type "bill"}}
-        <a href="/bills/{{.BillID}}/pay?date={{.DateStr}}&return={{.MonthStr}}" class="calendar-entry bill{{if .IsPaid}} paid{{end}}" title="Click to record payment">
-            -{{formatMoney .Amount}} {{.Name}}{{if .IsPaid}} ✓{{end}}
+        <a href="/bills/{{.BillID}}/pay?date={{.DateStr}}&return={{.MonthStr}}" class="calendar-entry bill{{if .HasActual}} paid{{end}}" title="Click to record payment">
+            -{{formatMoney .Amount}} {{.Name}}{{if .HasActual}} ✓{{end}}
         </a>
         {{else}}
-        <div class="calendar-entry income">
-            +{{formatMoney .Amount}} {{.Name}}
-        </div>
+        <a href="/income/{{.IncomeID}}/record?date={{.DateStr}}&return={{.MonthStr}}" class="calendar-entry income{{if .HasActual}} recorded{{end}}" title="Click to record actual amount">
+            +{{formatMoney .Amount}} {{.Name}}{{if .HasActual}} ✓{{end}}
+        </a>
         {{end}}
         {{end}}
         {{if .Entries}}

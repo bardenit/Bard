@@ -17,7 +17,7 @@
             </div>
         </div>
 
-        {{if .HasPrior}}
+        {{if .HasActual}}
         <div class="alert-warning mb-4">
             Previously recorded: <strong>{{formatMoney .PriorPayment.AmountPaid}}</strong>
             {{if .PriorPayment.Notes}} — {{.PriorPayment.Notes}}{{end}}
@@ -31,18 +31,18 @@
             <div class="form-group">
                 <label for="amount_paid">Amount Paid ($)</label>
                 <input type="number" id="amount_paid" name="amount_paid" step="0.01" min="0"
-                    value="{{if .HasPrior}}{{centsToDollar .PriorPayment.AmountPaid}}{{else}}{{centsToDollar .Bill.Amount}}{{end}}"
+                    value="{{if .HasActual}}{{centsToDollar .PriorPayment.AmountPaid}}{{else}}{{centsToDollar .Bill.Amount}}{{end}}"
                     required autofocus>
             </div>
 
             <div class="form-group">
                 <label for="notes">Notes <span class="text-muted">(optional)</span></label>
                 <input type="text" id="notes" name="notes" placeholder="e.g., paid early, partial payment"
-                    value="{{if .HasPrior}}{{.PriorPayment.Notes}}{{end}}">
+                    value="{{if .HasActual}}{{.PriorPayment.Notes}}{{end}}">
             </div>
 
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary">{{if .HasPrior}}Update Payment{{else}}Record Payment{{end}}</button>
+                <button type="submit" class="btn btn-primary">{{if .HasActual}}Update Payment{{else}}Record Payment{{end}}</button>
                 <a href="/calendar?month={{.ReturnMonth}}" class="btn btn-link">Cancel</a>
             </div>
         </form>

@@ -29,6 +29,14 @@ func IncomeRouter(w http.ResponseWriter, r *http.Request) {
 		IncomeDeleteHandler(w, r)
 	case strings.HasSuffix(path, "/set-primary"):
 		IncomeSetPrimaryHandler(w, r)
+	case strings.HasSuffix(path, "/record"):
+		if r.Method == http.MethodGet {
+			IncomeRecordFormHandler(w, r)
+		} else if r.Method == http.MethodPost {
+			IncomeRecordHandler(w, r)
+		} else {
+			http.NotFound(w, r)
+		}
 	default:
 		http.NotFound(w, r)
 	}
@@ -191,4 +199,80 @@ func IncomeDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/income", http.StatusSeeOther)
+}
+
+// IncomeRecordFormHandler shows the form to record an actual amount received for an income occurrence.
+func IncomeRecordFormHandler(w http.ResponseWriter, r *http.Request) {
+	idStr := strings.TrimPrefix(r.URL.Path, "/income/")
+	idStr = strings.TrimSuffix(idStr, "/record")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	item, err := models.GetIncome(id)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	occurrenceDate := r.URL.Query().Get("date")
+	returnMonth := r.URL.Query().Get("return")
+	if returnMonth == "" && occurrenceDate != "" && len(occurrenceDate) >= 7 {
+		returnMonth = occurrenceDate[:7]
+	}
+
+	existing, hasActual, _ := models.GetIncomeActual(id, occurrenceDate)
+
+	data := PageData{
+		Title:     "Record Income — " + item.Name,
+		ActiveNav: "income",
+		Flash:     GetFlash(w, r),
+	}
+	data.Extra = map[string]interface{}{
+		"Income":         item,
+		"OccurrenceDate": occurrenceDate,
+		"ReturnMonth":    returnMonth,
+		"HasActual":      hasActual,
+		"PriorActual":    existing,
+	}
+	RenderTemplate(w, "income_record.html", data)
+}
+
+// IncomeRecordHandler saves the actual amount received for an income occurrence.
+func IncomeRecordHandler(w http.ResponseWriter, r *http.Request) {
+	idStr := strings.TrimPrefix(r.URL.Path, "/income/")
+	idStr = strings.TrimSuffix(idStr, "/record")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	occurrenceDate := r.FormValue("occurrence_date")
+	returnMonth := r.FormValue("return_month")
+	amountStr := r.FormValue("amount_actual")
+	notes := strings.TrimSpace(r.FormValue("notes"))
+
+	amountActual, err := parseCents(amountStr)
+	if err != nil || occurrenceDate == "" {
+		SetFlash(w, "Please enter a valid amount.")
+		redirectTo := "/income/" + strconv.Itoa(id) + "/record?date=" + occurrenceDate + "&return=" + returnMonth
+		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+		return
+	}
+
+	if err := models.RecordIncomeActual(id, occurrenceDate, amountActual, notes); err != nil {
+		log.Printf("Error recording income actual: %v", err)
+		SetFlash(w, "Failed to record income.")
+	} else {
+		SetFlash(w, "Income recorded.")
+	}
+
+	if returnMonth != "" {
+		http.Redirect(w, r, "/calendar?month="+returnMonth, http.StatusSeeOther)
+	} else {
+		http.Redirect(w, r, "/calendar", http.StatusSeeOther)
+	}
 }

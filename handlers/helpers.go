@@ -36,7 +36,9 @@ func InitTemplates(dir string) {
 	pages := []string{
 		"dashboard.html",
 		"bills.html",
+		"bill_pay.html",
 		"income.html",
+		"income_record.html",
 		"budgets.html",
 		"expenditures.html",
 		"calendar.html",
